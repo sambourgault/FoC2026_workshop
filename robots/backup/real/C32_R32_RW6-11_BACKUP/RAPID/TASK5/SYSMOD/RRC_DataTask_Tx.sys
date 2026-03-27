@@ -53,16 +53,16 @@ MODULE RRC_DataTask_Tx(SYSMODULE)
     CONST num n_RRC_ProtocolRob:=2;
     CONST num n_RRC_SendProtocolPerChannel:=2;
     !
-    TASK PERS num n_RRC_ReadPtrSenBufRob{n_RRC_NumOfCha}:=[2,1,1,1];
+    TASK PERS num n_RRC_ReadPtrSenBufRob{n_RRC_NumOfCha}:=[3,1,1,1];
     TASK PERS num n_RRC_ReadPtrSenBufCtrl{n_RRC_NumOfCha}:=[1,1,1,1];
     !
-    TASK PERS num n_RRC_SenHeaderSqzNr{n_RRC_NumOfCha}:=[1,0,0,0];
+    TASK PERS num n_RRC_SenHeaderSqzNr{n_RRC_NumOfCha}:=[2,0,0,0];
     !
-    TASK PERS num n_RRC_SenMsgLenRob:=66;
+    TASK PERS num n_RRC_SenMsgLenRob:=60;
     !
-    TASK PERS num n_RRC_TimeStamp:=273.676;
-    TASK PERS num n_RRC_TimeStampSec:=273;
-    TASK PERS num n_RRC_TimeStampNanoSec:=675;
+    TASK PERS num n_RRC_TimeStamp:=184.622;
+    TASK PERS num n_RRC_TimeStampSec:=184;
+    TASK PERS num n_RRC_TimeStampNanoSec:=621;
 
     !************************************************
     ! Declaration :     string
@@ -100,7 +100,7 @@ MODULE RRC_DataTask_Tx(SYSMODULE)
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]],
 
-    [[[70,2,273,675],[1,0,18,"r_RRC_MoveToJoints",0,4,"Done",1,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    [[[64,2,184,621],[2,0,12,"r_RRC_MoveTo",0,4,"Done",3,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]];

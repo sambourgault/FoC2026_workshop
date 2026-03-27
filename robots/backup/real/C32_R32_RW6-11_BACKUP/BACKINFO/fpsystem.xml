@@ -84,7 +84,7 @@
       <PROP name="type" value="" />
     </DATA>
     <DATA id="QuickSet">
-      <PROP name="IncrementToggle" value="Medium" />
+      <PROP name="IncrementToggle" value="User" />
     </DATA>
     <DATA id="IO Filter">
       <PROP name="IOFilterLimit" value="100" />

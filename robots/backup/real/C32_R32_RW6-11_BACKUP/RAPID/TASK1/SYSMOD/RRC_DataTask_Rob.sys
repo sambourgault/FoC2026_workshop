@@ -43,7 +43,7 @@ MODULE RRC_DataTask_Rob(SYSMODULE)
     !
     CONST num n_RRC_PulRatWaiJobRec:=0.01;
     !
-    TASK PERS num n_RRC_ReadPtrRecBuf:=2;
+    TASK PERS num n_RRC_ReadPtrRecBuf:=7;
     !
     CONST num n_RRC_NumOfCha:=4;
     TASK PERS num n_RRC_ChaNr:=1;
