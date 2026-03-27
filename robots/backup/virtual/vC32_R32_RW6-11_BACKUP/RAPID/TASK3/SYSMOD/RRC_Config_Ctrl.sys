@@ -63,7 +63,7 @@ MODULE RRC_Config_Ctrl(SYSMODULE)
         ch_RRC_Channels.Ch_4.Ch_Nr:=4;
         !
         ! IP Address
-        b_RRC_AutoIPAddress:=TRUE;
+        b_RRC_AutoIPAddress:=FALSE;
         st_RRC_IP_AddressMan:="192.168.125.1";
         !
         ! Ports 

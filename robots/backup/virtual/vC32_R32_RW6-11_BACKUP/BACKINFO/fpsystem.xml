@@ -2,30 +2,13 @@
 <!--Comments: Settings for the FlexPendant.-->
 <FP>
   <USER name="">
-    <DATA id="IO View">
-      <PROP name="Configurations file" value="/hd0a/4600-101940_RW6.3_MAS2/INTERNAL/FPConfigurations.xml" />
-      <PROP name="Signal view layout" value="Default" />
-    </DATA>
-    <DATA id="ViewInAuto">
-      <PROP name="text" value="PARAM_TXT_VIEWINAUTO" />
-      <PROP name="dll" value="TpsViewProductionWnd.dll" />
-      <PROP name="type" value="ABB.Robotics.Tps.Production.TpsViewProductionWnd" />
-    </DATA>
-    <DATA id="ViewInManFull">
-      <PROP name="text" value="PARAM_TXT_VIEWINMANFULL" />
+    <DATA id="ViewInManual">
+      <PROP name="text" value="PARAM_TXT_VIEWINMANUAL" />
       <PROP name="dll" value="" />
       <PROP name="type" value="" />
     </DATA>
     <DATA id="CtrlPnl Configuration">
       <PROP name="LASTPATH" value="/hd0a/4600-101940_RW6.3_MAS2/HOME/" />
-    </DATA>
-    <DATA id="Display">
-      <PROP name="BackgroundImage" value="(HOME$)/compas_rrc_fp_background_version_1.gif" />
-    </DATA>
-    <DATA id="UASViewLevel">
-      <PROP name="text" value="PARAM_TXT_UASVIEWLEVEL" />
-      <PROP name="level" value="Msg" />
-      <PROP name="type" value="" />
     </DATA>
     <DATA id="DefaultPath">
       <PROP name="BackupRestore" value="" />
@@ -33,15 +16,35 @@
       <PROP name="RapidPrograms" value="" />
       <PROP name="RapidModules" value="" />
     </DATA>
-    <DATA id="ViewInManual">
-      <PROP name="text" value="PARAM_TXT_VIEWINMANUAL" />
-      <PROP name="dll" value="" />
-      <PROP name="type" value="" />
+    <DATA id="AdditionalTestView">
+      <PROP name="TestView" value="" />
     </DATA>
-    <DATA id="Backup Restore">
-      <PROP name="LastPath" value="ctrl:/hd0a/BACKUP/" />
+    <DATA id="ABB.Robotics.Tps.FileExplorer.TpsViewFileExplorer">
+      <PROP name="LASTPATH" value="/hd0a/4600-101940_RW6.3_MAS2/HOME/" />
+    </DATA>
+    <DATA id="Display">
+      <PROP name="BackgroundImage" value="(HOME$)/compas_rrc_fp_background_version_1.gif" />
+    </DATA>
+    <DATA id="UserSettings">
+      <PROP name="RapidEditorFontIndex" value="5" />
+    </DATA>
+    <DATA id="ViewInAuto">
+      <PROP name="text" value="PARAM_TXT_VIEWINAUTO" />
+      <PROP name="dll" value="TpsViewProductionWnd.dll" />
+      <PROP name="type" value="ABB.Robotics.Tps.Production.TpsViewProductionWnd" />
     </DATA>
     <DATA id="Programmable Key_2">
+      <PROP name="type" value="None" />
+      <PROP name="allowInAuto" value="No" />
+      <PROP name="pressed" value="" />
+      <PROP name="target" value="" />
+    </DATA>
+    <DATA id="Program Editor">
+      <PROP name="HideDeclarations" value="True" />
+      <PROP name="ShowOnlyServiceRoutines" value="True" />
+      <PROP name="ProgramPath" value="" />
+    </DATA>
+    <DATA id="Programmable Key_3">
       <PROP name="type" value="None" />
       <PROP name="allowInAuto" value="No" />
       <PROP name="pressed" value="" />
@@ -51,28 +54,37 @@
       <PROP name="FilterScope" value="All" />
       <PROP name="FilterString" value="" />
     </DATA>
-    <DATA id="Program Editor">
-      <PROP name="HideDeclarations" value="True" />
-      <PROP name="ShowOnlyServiceRoutines" value="True" />
-      <PROP name="ProgramPath" value="" />
+    <DATA id="Backup Restore">
+      <PROP name="LastPath" value="ctrl:/hd0a/BACKUP/" />
     </DATA>
-    <DATA id="ABB.Robotics.Tps.FileExplorer.TpsViewFileExplorer">
-      <PROP name="LASTPATH" value="/hd0a/4600-101940_RW6.3_MAS2/HOME/" />
+    <DATA id="UASViewLevel">
+      <PROP name="text" value="PARAM_TXT_UASVIEWLEVEL" />
+      <PROP name="level" value="Msg" />
+      <PROP name="type" value="" />
     </DATA>
-    <DATA id="Show">
-      <PROP name="default" value="CtrlSysName" />
+    <DATA id="IO View">
+      <PROP name="Configurations file" value="/hd0a/4600-101940_RW6.3_MAS2/INTERNAL/FPConfigurations.xml" />
+      <PROP name="Signal view layout" value="Default" />
     </DATA>
-    <DATA id="Programmable Key_3">
+    <DATA id="Programmable Key_4">
+      <PROP name="type" value="System" />
+      <PROP name="allowInAuto" value="Yes" />
+      <PROP name="pressed" value="MovePPToMain" />
+      <PROP name="target" value="" />
+    </DATA>
+    <DATA id="Programmable Key_1">
       <PROP name="type" value="None" />
       <PROP name="allowInAuto" value="No" />
       <PROP name="pressed" value="" />
       <PROP name="target" value="" />
     </DATA>
+    <DATA id="ViewInManFull">
+      <PROP name="text" value="PARAM_TXT_VIEWINMANFULL" />
+      <PROP name="dll" value="" />
+      <PROP name="type" value="" />
+    </DATA>
     <DATA id="QuickSet">
       <PROP name="IncrementToggle" value="Medium" />
-    </DATA>
-    <DATA id="AdditionalTestView">
-      <PROP name="TestView" value="" />
     </DATA>
     <DATA id="IO Filter">
       <PROP name="IOFilterLimit" value="100" />
@@ -92,20 +104,8 @@
       <PROP name="Alias IO Filter" value="" />
       <PROP name="Simulated IO FIlter" value="" />
     </DATA>
-    <DATA id="Programmable Key_1">
-      <PROP name="type" value="None" />
-      <PROP name="allowInAuto" value="No" />
-      <PROP name="pressed" value="" />
-      <PROP name="target" value="" />
-    </DATA>
-    <DATA id="Programmable Key_4">
-      <PROP name="type" value="System" />
-      <PROP name="allowInAuto" value="Yes" />
-      <PROP name="pressed" value="MovePPToMain" />
-      <PROP name="target" value="" />
-    </DATA>
-    <DATA id="UserSettings">
-      <PROP name="RapidEditorFontIndex" value="5" />
+    <DATA id="Show">
+      <PROP name="default" value="CtrlSysName" />
     </DATA>
   </USER>
 </FP>

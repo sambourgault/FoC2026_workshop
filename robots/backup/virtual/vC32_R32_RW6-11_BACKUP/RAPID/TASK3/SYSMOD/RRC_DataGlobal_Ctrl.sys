@@ -41,7 +41,7 @@ MODULE RRC_DataGlobal_Ctrl(SYSMODULE)
     PERS bool b_RRC_CtrlWaitForJob:=TRUE;
     PERS bool b_RRC_CtrlHamModOn:=FALSE;
     PERS bool b_RRC_CtrlInUse:=FALSE;
-    PERS bool b_RRC_AutoIPAddress:=TRUE;
+    PERS bool b_RRC_AutoIPAddress:=FALSE;
     PERS bool b_RRC_VirtualCustomPorts:=FALSE;
     !
     ! Channels
@@ -93,18 +93,18 @@ MODULE RRC_DataGlobal_Ctrl(SYSMODULE)
     PERS string st_RRC_CurCtrlJob:="RRC";
     PERS string st_RRC_JobForCtrl:="r_A031_HamMod";
     !
-    PERS string st_RRC_IP_Address:="127.0.0.1";
+    PERS string st_RRC_IP_Address:="192.168.125.1";
     PERS string st_RRC_IP_AddressVC:="127.0.0.1";
     PERS string st_RRC_IP_AddressMan:="192.168.125.1";
     !
     ! System data 
     PERS string st_RRC_SerialNr:="4600-101940";
-    PERS string st_RRC_SoftwareVersion:="ROBOTWARE_6.13.2015";
-    PERS string st_RRC_RobotWare:="6.13.02.00";
-    PERS string st_RRC_ControllerID:="VC";
-    PERS string st_RRC_WAN_IP:="VC";
+    PERS string st_RRC_SoftwareVersion:="ROBOTWARE_6.11.3004";
+    PERS string st_RRC_RobotWare:="6.11.03.00";
+    PERS string st_RRC_ControllerID:="4600-101940";
+    PERS string st_RRC_WAN_IP:="0.0.0.0";
     PERS string st_RRC_ControllerLang:="en";
-    PERS string st_RRC_SystemName:="vC32_R32_RW6-11";
+    PERS string st_RRC_SystemName:="C32_R32_RW6-11";
 
     !************************************************
     ! Declaration :     tasklist
@@ -182,7 +182,7 @@ MODULE RRC_DataGlobal_Ctrl(SYSMODULE)
     !
     ! Receiver buffer for robots
     PERS RRC_buffer_msg bm_RRC_RecBufferRob{n_RRC_NumOfCha,10}:=[
-    [[[1,0,18,"r_RRC_MoveToJoints",1,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",14,0,0,0,0,30,0,0,0,0,0,0,0,1000,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],FALSE],
+    [[[1,0,18,"r_RRC_MoveToJoints",1,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",14,0,0,0,0,30,0,0,0,0,0,0,0,100,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],FALSE],
     [[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],FALSE],
     [[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],FALSE],
     [[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],FALSE],

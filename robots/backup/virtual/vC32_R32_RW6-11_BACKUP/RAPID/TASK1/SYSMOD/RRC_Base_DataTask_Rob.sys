@@ -37,9 +37,9 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     !
     TASK PERS num n_RRC_Answer:=0;
     TASK PERS num n_RRC_Act_S_ID:=4;
-    TASK PERS num n_RRC_Time:=1;
+    TASK PERS num n_RRC_Time:=0.5;
     TASK PERS num n_RRC_Acc:=100;
-    TASK PERS num n_RRC_Ramp:=100;
+    TASK PERS num n_RRC_Ramp:=50;
     TASK PERS num n_RRC_Override:=100;
     TASK PERS num n_RRC_MaxTCP:=250;
     TASK PERS num n_RRC_FloatValue:=42;
@@ -60,14 +60,14 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     TASK PERS string st_RRC_ActBtn4:="";
     TASK PERS string st_RRC_ActBtn5:="";
     TASK PERS string st_RRC_Header:="Update Speed";
-    TASK PERS string st_RRC_TPWrite:="Welcome to COMPAS_RRC";
+    TASK PERS string st_RRC_TPWrite:="Returning to home position";
     TASK PERS string st_RRC_StringValue:="Custom Text";
 
     !************************************************
     ! Declaration :     tooldata
     !************************************************
     !
-    TASK PERS tooldata t_RRC_Act:=[TRUE,[[0,0,0],[1,0,0,0]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];
+    TASK PERS tooldata t_RRC_Act:=[TRUE,[[3.91324,2.05997,328.909],[1,0,0,0]],[3,[0,0,285],[1,0,0,0],0,0,0]];
 
     !************************************************
     ! Declaration :     wobjdata
@@ -80,7 +80,7 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     !************************************************
     !
     CONST speeddata v_RRC_Default:=[25,500,5000,1000];
-    TASK PERS speeddata v_RRC_Act:=[1000,500,5000,1000];
+    TASK PERS speeddata v_RRC_Act:=[100,500,5000,1000];
 
     !************************************************
     ! Declaration :     zonedata
@@ -98,7 +98,7 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     ! Declaration :     robtarget
     !************************************************
     !  
-    TASK PERS robtarget p_RRC_Act:=[[848.45,200.547,2229.85],[0.701057,-0.092296,0.701057,0.092296],[0,0,-1,0],[0,0,0,0,0,0]];
+    TASK PERS robtarget p_RRC_Act:=[[529.4,371.948,932],[-8.49199E-17,0.065128,0.997877,6.6905E-17],[0,0,-2,0],[-1590,0,0,0,0,0]];
 
     !************************************************
     ! Declaration :     signaldo
@@ -141,5 +141,6 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     !************************************************
     !
     VAR clock ck_RRC_StopWatch;
+    TASK PERS tooldata t_BrickGripper:=[TRUE,[[3.91324,2.05997,328.909],[1,0,0,0]],[3,[0,0,285],[1,0,0,0],0,0,0]];
 
 ENDMODULE
