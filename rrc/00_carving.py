@@ -16,7 +16,8 @@ def frame_m_to_mm(frame_m):
         Vector(frame_m.yaxis[0], frame_m.yaxis[1], frame_m.yaxis[2]),
     )
 
-PATHS_FOLDER = Path(__file__).with_name("sam_paths_may_16")
+data_folder = Path(__file__).with_name("compas_frames")
+PATHS_FOLDER = data_folder / "sam_test_may_16_zx4"
 
 if __name__ == '__main__':
     # Create Ros Client
@@ -90,7 +91,7 @@ if __name__ == '__main__':
         new_sample_frame = sample_frame_mm.transformed(transform)
         last_frame_mm = new_sample_frame
 
-        done = abb.send_and_wait(rrc.MoveToFrame(new_sample_frame, speed_carving, rrc.Zone.FINE, rrc.Motion.LINEAR))
+        done = abb.send(rrc.MoveToFrame(new_sample_frame, speed_carving, rrc.Zone.FINE, rrc.Motion.LINEAR))
         #print(f"Moved to frame {key} with feedback: {done}")
     
     #move above the last frame
