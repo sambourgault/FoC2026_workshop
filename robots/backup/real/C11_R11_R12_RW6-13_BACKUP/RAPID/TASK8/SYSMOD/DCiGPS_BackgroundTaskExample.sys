@@ -1,0 +1,52 @@
+MODULE DCiGPS_BackgroundTaskExample(SYSMODULE)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+
+    ! RFL Dynamic Correction Background Task Example
+    PROC RFLDCBackgroundTaskExample(string robot_name)
+        DCiGPSDispatcher robot_name;
+    ENDPROC
+    
+    PROC RFLDCProcExample()
+        CONST robtarget rt0 := [[22000, 9000, 2200], [0, 1, 0, 0], [-1, 0, 0, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST robtarget rt1 := [[22500, 9000, 2200], [0, 1, 0, 0], [-1, 0, 0, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST robtarget rt2 := [[22600, 9000, 2100], [0, 1, 0, 0], [-1, 0, 0, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST robtarget rt3 := [[22500, 9000, 2000], [0, 1, 0, 0], [-1, 0, 0, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST robtarget rt4 := [[22000, 9000, 2000], [0, 1, 0, 0], [-1, 0, 0, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST dcigps_speedata dc_ipgs_speed := [100, 10, 1]; ! Lin. vel. [mm/s], Ang. vel. [deg/s], Acc. time [s]
+        
+        TPWrite " RFL DC Controller running.";  
+        
+        TPWrite "**************************************";        
+        TPWrite "RFL Dynamic Correction procedure started.";
+        
+        ! Setting controller aggressivity
+        TPWrite "Setting controller aggressivity.";
+        DCiGPSSetAggressivity \HIGH;
+        TPWrite "Controller aggressivity was set.";
+        
+        ! DCiGPSMoveL with hold_target_time example
+        DCiGPSMoveL rt0, dc_ipgs_speed, "tool0", "wobj0", \hold_target_time:=5;
+                
+        ! Stop point movement example
+        TPWrite "Processing stop point movement example.";
+        DCiGPSMoveL rt1, dc_ipgs_speed, "tool0", "wobj0";
+        DCiGPSMoveC rt2, rt3, dc_ipgs_speed, "tool0", "wobj0";
+        DCiGPSMoveL rt4, dc_ipgs_speed, "tool0", "wobj0";
+        DCiGPSMoveL rt0, dc_ipgs_speed, "tool0", "wobj0";
+        TPWrite "Finished stop point movement example.";
+        
+        ! DCiGPSHoldRobTarget example
+        DCiGPSHoldRobTarget rt0, "tool0", "wobj0", 3;
+        
+        ! Fly-by point movement example. Note: "\FlyBy" parameter for all but last instruction.
+        TPWrite "Processing fly-by point movement example.";
+        DCiGPSMoveL rt1, dc_ipgs_speed, "tool0", "wobj0", \FlyBy;
+        DCiGPSMoveC rt2, rt3, dc_ipgs_speed, "tool0", "wobj0", \FlyBy;
+        DCiGPSMoveL rt4, dc_ipgs_speed, "tool0", "wobj0";
+        TPWrite "Finished fly-by point movement example.";
+        
+        TPWrite "RFL Dynamic Correction procedure finished.";        
+        TPWrite "**************************************";
+    ENDPROC
+    
+ENDMODULE

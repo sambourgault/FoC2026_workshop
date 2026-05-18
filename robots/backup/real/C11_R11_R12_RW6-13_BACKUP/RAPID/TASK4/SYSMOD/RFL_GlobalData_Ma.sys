@@ -1,0 +1,221 @@
+MODULE RFL_GlobalData_Ma(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL
+    !
+    ! FUNCTION    :  Includ all Global Data's for ETH Helper
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2016.08.11 Draft
+    !
+    ! Copyright   :  ETH Zurich (CH) 2016
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Declaration :     bool
+    !************************************************
+
+    PERS bool bWaitForJob:=FALSE;
+    !
+    ! E001 Saw    
+    PERS bool b_E001_SawAutoMod:=TRUE;
+    !
+    !************************************************
+    ! Declaration :     num
+    !************************************************
+    ! 
+    ! Used for Safety Message
+    PERS num nSMsgBtnPos:=2;
+    !
+    PERS num nSafePosZ:=-4500;
+    PERS num nTopPosZ:=-4915;
+    !
+    ! Values used for VelSet
+    PERS num nMaxTCP:=100;
+    PERS num nOverride:=5;
+    !
+    ! Timer
+    PERS num nTimeTPMsg:=1.2;
+    PERS num nTimUserReaction:=1.2;
+
+    !************************************************
+    ! Declaration :     string
+    !************************************************
+    !
+    PERS string stJobFrmMa:="r_A042_Main";
+    PERS string stCurMaJob:="A042";
+
+    !************************************************
+    ! Declaration :     string {array}
+    !************************************************
+    !
+    !* PERS string stBtnRobTasks{5}:=["T_ROB11","T_ROB12","T_ROB21","T_ROB22","Exit"];
+    PERS string stBtnRobTasks{5}:=["T_ROB11","T_ROB12","","","Exit"];
+    !
+    !************************************************
+    ! Declaration :     robjoint
+    !************************************************
+    !
+    PERS robjoint rjSafePos:=[0,-80,70,0,10,0];
+    !
+    !************************************************
+    ! Declaration :     speeddata
+    !************************************************
+    !
+    PERS speeddata vSysHMin:=[50,25,100,50];
+    PERS speeddata vSysHMed:=[500,100,500,100];
+    PERS speeddata vSysHMax:=[800,250,800,250];
+    !
+    PERS speeddata vRFLMin:=[250,100,250,500];
+    PERS speeddata vRFLMed:=[500,250,500,750];
+    PERS speeddata vRFLMax:=[1000,500,1000,1000];
+    ! 
+    PERS speeddata v_RFL_PathPlannerMin:=[100,10,100,1];
+    PERS speeddata v_RFL_PathPlannerMed:=[800,250,800,1];
+    PERS speeddata v_RFL_PathPlannerMax:=[300,50,300,1];
+    !
+    ! For Safe position
+    PERS speeddata vSafePosMin:=[250,100,250,500];
+    PERS speeddata vSafePosMed:=[500,250,500,750];
+    PERS speeddata vSafePosMax:=[1000,500,1000,1000];
+    !
+    PERS speeddata vRestorPos:=[250,100,250,500];
+    !
+    PERS speeddata vRefPointMin:=[5,100,250,500];
+    PERS speeddata vRefPointMed:=[50,100,250,500];
+    PERS speeddata vRefPointMax:=[250,500,1000,1000];
+
+    !************************************************
+    ! Declaration :     zonedata
+    !************************************************
+    !
+    PERS zonedata zMaMin:=[FALSE,10,15,15,1.5,15,1.5];
+    PERS zonedata zMaMed:=[FALSE,100,150,150,15,150,15];
+    PERS zonedata zMaMax:=[FALSE,200,300,300,30,300,30];
+
+    !************************************************
+    ! Declaration :     tasklist
+    !************************************************
+    !
+    PERS tasks tl_RFL_Empty{7}:=[[""],[""],[""],[""],[""],[""],[""]];
+    !
+    PERS tasks tl_RFL_All{7}:=[["T_CTRL"],["T_RX"],["T_TX"],["T_ROB11"],["T_ROB12"],[""],[""]];
+    PERS tasks tl_RFL_MaRob{7}:=[["T_CTRL"],["T_ROB11"],["T_ROB12"],[""],[""],[""],[""]];
+    PERS tasks tl_RFL_Rob{7}:=[["T_ROB11"],["T_ROB12"],[""],[""],[""],[""],[""]];
+    !
+    PERS tasks tl_RFL_MaRecSen{7}:=[["T_CTRL"],["T_RX"],["T_TX"],[""],[""],[""],[""]];    !
+    ! C11_R11_R12_R21_R22
+    !* PERS tasks tlAll{5}:=[["T_MASTER"],["T_ROB11"],["T_ROB12"],["T_ROB21"],["T_ROB22"]];
+    !* PERS tasks tlAllRob{4}:=[["T_ROB11"],["T_ROB12"],["T_ROB21"],["T_ROB22"]];
+    !
+    ! C11_R11_R12
+    PERS tasks tlAll{3}:=[["T_CTRL"],["T_ROB11"],["T_ROB12"]];
+    PERS tasks tlAllRob{2}:=[["T_ROB11"],["T_ROB12"]];
+    PERS tasks tlMaR11{2}:=[["T_CTRL"],["T_ROB11"]];
+    PERS tasks tlMaR12{2}:=[["T_CTRL"],["T_ROB12"]];
+    PERS tasks tlR11R12{2}:=[["T_ROB11"],["T_ROB12"]];
+    !
+    PERS tasks tlMaRecSen{3}:=[["T_CTRL"],["T_RX"],["T_TX"]];
+
+    !************************************************
+    ! Declaration :     syncident
+    !************************************************
+    !
+    VAR syncident idMainA009Sta;
+    VAR syncident idMainA009End;
+    !
+    VAR syncident idMainA011Sta;
+    VAR syncident idMainA011End;
+    !
+    VAR syncident idMainA019Sta;
+    VAR syncident idMainA019End;
+    !
+    VAR syncident idMainA024Sta;
+    VAR syncident idMainA024End;
+    !
+    VAR syncident idMainA029Sta;
+    VAR syncident idMainA029Sync1;
+    VAR syncident idMainA029End;
+    !
+    VAR syncident idABB_ExampleSta;
+    VAR syncident idABB_ExampleEnd;
+    !
+    VAR syncident idABB_CraneSta;
+    VAR syncident idABB_CraneEnd;
+    ! 
+    VAR syncident idABB_CalibPosSta;
+    VAR syncident idABB_CalibPosEnd;
+    !
+    VAR syncident idABB_BrakeCheckStart;
+    VAR syncident idABB_BrakeCheckInPos;
+    VAR syncident idABB_BrakeCheckDone;
+    VAR syncident idABB_BrakeCheckEnd;
+    !
+    VAR syncident idSCiGPS_ExampleSta;
+    VAR syncident idSCiGPS_ExampleEnd;
+    !
+    VAR syncident idSCiGPS_DataSetCreSta;
+    VAR syncident idSCiGPS_DataSetCreEnd;
+    !
+    VAR syncident idSCiGPS_UpdateOfflineDataStart;
+    VAR syncident idSCiGPS_UpdateOfflineDataEnd;
+    !
+    VAR syncident idSCiGPS_CalibPosStart;
+    VAR syncident idSCiGPS_CalibPosCompactDone;
+    VAR syncident idSCiGPS_CalibPosEnd;
+    !
+    VAR syncident idDCiGPS_CalibSta;
+    VAR syncident idDCiGPS_CalibEnd;
+    !
+    VAR syncident idDCiGPS_ExampleSta;
+    VAR syncident idDCiGPS_ExampleEnd;
+    !
+    VAR syncident idRFL_MaInitDone;
+    !
+    VAR syncident idRFL_InitTaskSta;
+    VAR syncident idRFL_InitTaskEnd;
+    !
+    VAR syncident idRFL_InitVarSta;
+    VAR syncident idRFL_InitVarEnd;
+    !
+    VAR syncident idRFL_InitSigSta;
+    VAR syncident idRFL_InitSigEnd;
+    !
+    VAR syncident idRFL_InitSpeedSta;
+    VAR syncident idRFL_InitSpeedSet;
+    VAR syncident idRFL_InitSpeedEnd;
+    !
+    VAR syncident idRFL_ExeJobFrmMaSta;
+    VAR syncident idRFL_ExeJobFrmMaEnd;
+    !
+    VAR syncident idRFL_SysHSta;
+    VAR syncident idRFL_SysHEnd;
+    !
+    VAR syncident idRFL_E1SawSta;
+    VAR syncident idRFL_E1SawEnd;
+    !
+    VAR syncident idRFL_TC11Sta;
+    VAR syncident idRFL_TC11End;
+    !
+    VAR syncident idRFL_TC12Sta;
+    VAR syncident idRFL_TC12End;
+    !
+    VAR syncident idETH_AAGSta;
+    VAR syncident idETH_AAGEnd;
+    !
+    !************************************************
+    ! Declaration :     listitem
+    !************************************************
+    !
+    PERS listitem liAllAxes{9}:=[["","A1"],["","A2"],["","A3"],["","A4"],["","A5"],["","A6"],["","AX"],["","AY"],["","AZ"]];
+ENDMODULE

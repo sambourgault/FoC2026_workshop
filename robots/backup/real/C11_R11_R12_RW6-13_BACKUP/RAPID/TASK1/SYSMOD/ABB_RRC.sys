@@ -1,0 +1,71 @@
+MODULE ABB_RRC(SYSMODULE)
+    !***********************************************************************************************************************************************
+    ! Module     : ABB_RRC
+    ! AUTHOR     : Jürgen Ott, Philippe Fleischmann, ABB Switzerland AG
+    ! DATE       : 2023_11_24
+    ! Description: Varius test functions callable by COMPAS_RRC
+    !
+    !
+    !***********************************************************************************************************************************************
+
+    !************************************************
+    ! Function    :     Custom Instruction
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2019.02.22
+    !***************** ETH Zurich *******************
+    !
+    PROC r_ABB_ApcoTechnologies()
+        VAR speeddata v_Act:=[0,0,0,0];
+        VAR zonedata z_Blend:=[FALSE,0,0,0,0,0,0];
+        VAR num n_TCP_Speed:=0;
+        VAR num n_Zone_Radius:=0;
+        !
+        ! Set max speed
+        v_Act:=vmax;
+        !
+        ! Read actual speed and zone radius
+        n_TCP_Speed:=bm_RRC_RecBufferRob{n_RRC_ChaNr,n_RRC_ReadPtrRecBuf}.Data.V1;
+        n_Zone_Radius:=bm_RRC_RecBufferRob{n_RRC_ChaNr,n_RRC_ReadPtrRecBuf}.Data.V2;
+        !
+        ! Update tcp speed
+        v_Act.v_tcp:=n_TCP_Speed;
+        !
+        ! Set zone data
+        z_Blend:=z200;
+        z_Blend.pzone_tcp:=n_Zone_Radius;
+        z_Blend.pzone_ori:=n_Zone_Radius;
+        z_Blend.pzone_eax:=n_Zone_Radius;
+        !
+        ! Move to end 
+        MoveAbsJ [[0.0,-65.0,65.0,-0.0,35.0,-0.0],[5000,-7100,-2300,0.0,0.0,0.0]]\NoEOffs,v_Act,fine,t_RRC_Act\WObj:=ob_RRC_Act;
+        MoveAbsJ [[0.0,-65.0,65.0,-0.0,35.0,-0.0],[7500,-4600,-4800,0.0,0.0,0.0]]\NoEOffs,v_Act,z_Blend,t_RRC_Act\WObj:=ob_RRC_Act;
+        MoveAbsJ [[0.0,-65.0,65.0,-0.0,35.0,-0.0],[10000,-2100,-2300,0.0,0.0,0.0]]\NoEOffs,v_Act,fine,t_RRC_Act\WObj:=ob_RRC_Act;
+        !
+        ! Move back to start 
+        MoveAbsJ [[0.0,-65.0,65.0,-0.0,35.0,-0.0],[7500,-4600,-4800,0.0,0.0,0.0]]\NoEOffs,v_Act,z_Blend,t_RRC_Act\WObj:=ob_RRC_Act;
+        MoveAbsJ [[0.0,-65.0,65.0,-0.0,35.0,-0.0],[5000,-7100,-2300,0.0,0.0,0.0]]\NoEOffs,v_Act,fine,t_RRC_Act\WObj:=ob_RRC_Act;
+        !
+        ! Feedback
+        IF bm_RRC_RecBufferRob{n_RRC_ChaNr,n_RRC_ReadPtrRecBuf}.Data.F_Lev>0 THEN
+            !
+            ! Cenerate feedback
+            TEST bm_RRC_RecBufferRob{n_RRC_ChaNr,n_RRC_ReadPtrRecBuf}.Data.F_Lev
+            CASE 1:
+                !
+                ! Instruction done
+                r_RRC_FDone;
+            DEFAULT:
+                !
+                ! Feedback not supported
+                r_RRC_FError;
+            ENDTEST
+            !
+            ! Move message in send buffer
+            r_RRC_MovMsgToSenBufRob n_RRC_ChaNr;
+        ENDIF
+        RETURN ;
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+ENDMODULE

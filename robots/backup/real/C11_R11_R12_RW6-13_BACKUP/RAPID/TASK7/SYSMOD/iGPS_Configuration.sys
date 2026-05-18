@@ -1,0 +1,31 @@
+MODULE iGPS_Configuration(SYSMODULE, NOSTEPIN)
+    ! The documentation can be found in the wiki on https://bitbucket.org/ethrfl/adrl-rfl-static-correction/
+    
+    RECORD RobotDefinition
+        string robot_name;
+        num sc_server_port;
+        string ufmec;
+    ENDRECORD
+    
+    CONST string kiGPSServerIP := "192.168.50.11"; ! iGPS Server IP
+    CONST num kDSCPort := 20003; ! Data set creation server port
+    CONST speeddata kDSCSpeed := [300,100,800,1]; ! Robot speed used during data set creation
+    CONST speeddata kSCSpeed := v20; ! Robot speed used during correction step
+    CONST num kSCAccSettings{3} := [50, 20, 20]; ! Acceleration settings used for SC movements (Acc, Ramp, FinePointRamp)
+    CONST loaddata kDSCLoadData := [7.5, [-10, 0, 30], [1, 0, 0, 0], 0, 0, 0]; ! Tool load data used during data set creation
+    CONST bool kAlwaysUseOfflineData := FALSE; ! If this is true, the offline data is always used, also on the real robot
+    CONST bool kIngoreVirtMode := FALSE; ! If this is true, the virtual controller will also connect to the SC server
+    CONST bool kEnableCorrectionStep := TRUE; ! Correction step can be disabled e.g. if iGPS data is not available
+    CONST bool kAlwaysCheckRobTarget := FALSE; ! If this is true, a CheckRobTarget is done automatically after every correction step
+    CONST num kAlwaysCheckDelay := 3; ! Delay before automatic CheckRobTarget is executed.
+    CONST num kAlwaysCheckLinError := 0.5; ! Max lin error used for automatic CheckRobTarget
+    CONST num kAlwaysCheckRotError := 0.1; ! Max rot error used for automatic CheckRobTarget
+    
+    ! Definition of robot names, static correction server ports and base mechanical units
+    CONST RobotDefinition kRobotDefs{4} := 
+        [["Robot11", 20011, "Gantry11"], 
+         ["Robot12", 20012, "Gantry12"], 
+         ["Robot21", 20021, "Gantry21"], 
+         ["Robot22", 20022, "Gantry22"]]; 
+    
+ENDMODULE

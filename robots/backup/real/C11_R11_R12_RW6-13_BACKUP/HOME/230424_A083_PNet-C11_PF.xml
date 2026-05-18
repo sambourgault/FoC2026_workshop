@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IPPNIO>
+	<Version>
+		<UUID ExCRC="1">08F8055FFE0D4090B38CF5EA97BE9CDA</UUID>
+		<CfgBrokerVersion>18.630.0.38</CfgBrokerVersion>
+		<CRC CRCVal="935451163" ExCRC="1"></CRC>
+	</Version>
+	<CtlrParas>
+		<CtlrIP d1="192" d2="168" d3="10" d4="2" ExCRC="1"></CtlrIP>
+		<CtlrMask d1="255" d2="255" d3="255" d4="0" ExCRC="1"></CtlrMask>
+		<CtlrGate d1="192" d2="168" d3="10" d4="2" ExCRC="1"></CtlrGate>
+		<StatN>IRC5-Master-C11</StatN>
+		<Station ExCRC="1"></Station>
+		<DevName ExCRC="1"></DevName>
+		<ModEquId ExCRC="1"></ModEquId>
+		<FDCMLFile>Profinet\KW-Software\KW-Softwarev01_3.80.xml</FDCMLFile>
+		<CEId>CommEnt_3</CEId>
+	</CtlrParas>
+	<ARs>
+		<AR BlVers="256" ARTyp="IO_AR_SINGLE" ARUID="7" MulWrt="true" PRL="NO">
+			<ARUUID d1="599889888" d2="755" d3="17154" d4="157" d5="55" d6="163" d7="56" d8="189" d9="244" d10="66" d11="255"></ARUUID>
+			<ARProp State="PRIMARY" SVTO="NOT_ALLOWED" PSrv="CM_INITIATOR" DRate="DR_AT_LEAST_100_MBIT" CRTr="SRT_TRANSPORT" CfgDiff="NOT_ALLOWED" LogConStat="YES" IgnFS="NO" Safety="NO" StartAR="YES" ArCRC="1058864862"></ARProp>
+			<CRs CRCnt="2">
+				<CRPara BlVers="256" CRID="7" RTCls="RT_CLASS1_RTC" MdRedn="false" CRTyp="INPUT_CR" DatLn="8" FrID="49158" SndClc="32" RedRat="8" Phs="8" Seq="0" FrOffst="BEST_EFFORT" WtchD="24" DatHld="24" APDUOffst="42">
+					<CRHdr VLID="NO_VLANID" CRPrio="IOCR_PRIORITY"></CRHdr>
+					<MCAddr d1="0" d2="0" d3="0" d4="0" d5="0" d6="0"></MCAddr>
+					<RelAPICRs APICnt="1">
+						<APICR API="0">
+							<RelDatas RelDatCnt="5">
+								<RelDat SlNr="0" SSlNr="1"></RelDat>
+								<RelDat SlNr="0" SSlNr="32768"></RelDat>
+								<RelDat SlNr="0" SSlNr="32769"></RelDat>
+								<RelDat SlNr="0" SSlNr="32770"></RelDat>
+								<RelDat SlNr="1" SSlNr="1"></RelDat>
+							</RelDatas>
+							<RelIOCSs RelIOCSCnt="2">
+								<RelIOCS SlNr="1" SSlNr="1"></RelIOCS>
+								<RelIOCS SlNr="2" SSlNr="1"></RelIOCS>
+							</RelIOCSs>
+						</APICR>
+					</RelAPICRs>
+				</CRPara>
+				<CRPara BlVers="256" CRID="7" RTCls="RT_CLASS1_RTC" MdRedn="false" CRTyp="OUTPUT_CR" DatLn="12" FrID="65535" SndClc="32" RedRat="8" Phs="8" Seq="0" FrOffst="BEST_EFFORT" WtchD="24" DatHld="24">
+					<CRHdr VLID="NO_VLANID" CRPrio="IOCR_PRIORITY"></CRHdr>
+					<MCAddr d1="0" d2="0" d3="0" d4="0" d5="0" d6="0"></MCAddr>
+					<RelAPICRs APICnt="1">
+						<APICR API="0">
+							<RelDatas RelDatCnt="2">
+								<RelDat SlNr="1" SSlNr="1"></RelDat>
+								<RelDat SlNr="2" SSlNr="1"></RelDat>
+							</RelDatas>
+							<RelIOCSs RelIOCSCnt="5">
+								<RelIOCS SlNr="0" SSlNr="1"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32768"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32769"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32770"></RelIOCS>
+								<RelIOCS SlNr="1" SSlNr="1"></RelIOCS>
+							</RelIOCSs>
+						</APICR>
+					</RelAPICRs>
+				</CRPara>
+			</CRs>
+			<ModParas ModParCnt="3">
+				<ModPara SlNr="0">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+				<ModPara SlNr="1">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-DM#F_ID_MODULE_DM#F.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+				<ModPara SlNr="2">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-SPN (32 coils)_ID_MODULE_VALVE32.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+			</ModParas>
+			<SMParas SMCnt="3">
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="0" ModID="1" ModProp="0">
+							<SMs SMCnt="4">
+								<SMDes SSlNr="1" SMID="1" NdID="191">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="4"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="0"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModule1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32768" SMID="2" NdID="192">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="5"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="1"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModuleInt1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32769" SMID="3" NdID="193">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="6"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="2"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModulePort1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32770" SMID="4" NdID="194">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="7"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="3"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModulePort2</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="1" ModID="543" ModProp="0">
+							<SMs SMCnt="1">
+								<SMDes SSlNr="1" SMID="0" NdID="196">
+									<SMProp Shar="NO_SHARED_INPUT" SMTyp="IO"></SMProp>
+									<SMElDess ElCnt="6">
+										<SMElDes Intpret="DATA" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="2"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="3"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="0"></SMElDes>
+										<SMElDes Intpret="DATA" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="10"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="11"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="4"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-DM#F_ID_MODULE_DM#F.xml</FDCMLFile>
+									<CEId>ceModule</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="2" ModID="260" ModProp="0">
+							<SMs SMCnt="1">
+								<SMDes SSlNr="1" SMID="0" NdID="197">
+									<SMProp Shar="INVALID" SMTyp="OUTPUT"></SMProp>
+									<SMElDess ElCnt="3">
+										<SMElDes Intpret="IOCS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="1"></SMElDes>
+										<SMElDes Intpret="DATA" Descr="DATA_OUTPUT" Len="4" SubsMod="NULL_VALUE" Offst="5"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="9"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-SPN (32 coils)_ID_MODULE_VALVE32.xml</FDCMLFile>
+									<CEId>ceModule</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+			</SMParas>
+			<AlCRParas AlCRCnt="1">
+				<AlCRPara BlVers="256" AlCRPrTp="DATA_RTA_PDU" Prio="USER_PRIORITY" RTATmout="500" Retr="3" LocAlRef="0" MaxAlLen="200"></AlCRPara>
+			</AlCRParas>
+			<DevParas>
+				<DevPara DevID="8" VndID="131" DevIns="1" StatNLen="21" StatN="pnetr11iou.ex600-spn2" IPovDNS="false" UseIODevIpAdr="NO">
+					<IP d1="192" d2="168" d3="10" d4="111"></IP>
+					<Mask d1="255" d2="255" d3="255" d4="0"></Mask>
+					<Gate d1="192" d2="168" d3="10" d4="111"></Gate>
+					<Station ExCRC="1"></Station>
+					<DevName ExCRC="1"></DevName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\EX600_20130220_EX600-SPN_DAP V2.0.xml</FDCMLFile>
+					<CEId>CommEnt_1</CEId>
+				</DevPara>
+			</DevParas>
+			<ARParas>
+				<ARPara SlNr="1" SSlNr="1" Idx="1" ParaLen="8">
+					<Para>10C0010100000000</Para>
+				</ARPara>
+				<ARPara SlNr="1" SSlNr="1" Idx="2" ParaLen="2">
+					<Para>0000</Para>
+				</ARPara>
+				<ARPara SlNr="1" SSlNr="1" Idx="3" ParaLen="4">
+					<Para>00000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="1" ParaLen="8">
+					<Para>1040000000000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="2" ParaLen="4">
+					<Para>00000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="3" ParaLen="8">
+					<Para>0000000000000000</Para>
+				</ARPara>
+			</ARParas>
+		</AR>
+		<AR BlVers="256" ARTyp="IO_AR_SINGLE" ARUID="5" MulWrt="true" PRL="NO">
+			<ARUUID d1="3198116124" d2="23363" d3="17365" d4="173" d5="253" d6="165" d7="21" d8="212" d9="71" d10="108" d11="4"></ARUUID>
+			<ARProp State="PRIMARY" SVTO="NOT_ALLOWED" PSrv="CM_INITIATOR" DRate="DR_AT_LEAST_100_MBIT" CRTr="SRT_TRANSPORT" CfgDiff="NOT_ALLOWED" LogConStat="YES" IgnFS="NO" Safety="NO" StartAR="YES" ArCRC="2714215212"></ARProp>
+			<CRs CRCnt="2">
+				<CRPara BlVers="256" CRID="5" RTCls="RT_CLASS1_RTC" MdRedn="false" CRTyp="INPUT_CR" DatLn="8" FrID="49156" SndClc="32" RedRat="8" Phs="7" Seq="0" FrOffst="BEST_EFFORT" WtchD="24" DatHld="24" APDUOffst="42">
+					<CRHdr VLID="NO_VLANID" CRPrio="IOCR_PRIORITY"></CRHdr>
+					<MCAddr d1="0" d2="0" d3="0" d4="0" d5="0" d6="0"></MCAddr>
+					<RelAPICRs APICnt="1">
+						<APICR API="0">
+							<RelDatas RelDatCnt="5">
+								<RelDat SlNr="0" SSlNr="1"></RelDat>
+								<RelDat SlNr="0" SSlNr="32768"></RelDat>
+								<RelDat SlNr="0" SSlNr="32769"></RelDat>
+								<RelDat SlNr="0" SSlNr="32770"></RelDat>
+								<RelDat SlNr="1" SSlNr="1"></RelDat>
+							</RelDatas>
+							<RelIOCSs RelIOCSCnt="2">
+								<RelIOCS SlNr="1" SSlNr="1"></RelIOCS>
+								<RelIOCS SlNr="2" SSlNr="1"></RelIOCS>
+							</RelIOCSs>
+						</APICR>
+					</RelAPICRs>
+				</CRPara>
+				<CRPara BlVers="256" CRID="5" RTCls="RT_CLASS1_RTC" MdRedn="false" CRTyp="OUTPUT_CR" DatLn="12" FrID="65535" SndClc="32" RedRat="8" Phs="7" Seq="0" FrOffst="BEST_EFFORT" WtchD="24" DatHld="24">
+					<CRHdr VLID="NO_VLANID" CRPrio="IOCR_PRIORITY"></CRHdr>
+					<MCAddr d1="0" d2="0" d3="0" d4="0" d5="0" d6="0"></MCAddr>
+					<RelAPICRs APICnt="1">
+						<APICR API="0">
+							<RelDatas RelDatCnt="2">
+								<RelDat SlNr="1" SSlNr="1"></RelDat>
+								<RelDat SlNr="2" SSlNr="1"></RelDat>
+							</RelDatas>
+							<RelIOCSs RelIOCSCnt="5">
+								<RelIOCS SlNr="0" SSlNr="1"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32768"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32769"></RelIOCS>
+								<RelIOCS SlNr="0" SSlNr="32770"></RelIOCS>
+								<RelIOCS SlNr="1" SSlNr="1"></RelIOCS>
+							</RelIOCSs>
+						</APICR>
+					</RelAPICRs>
+				</CRPara>
+			</CRs>
+			<ModParas ModParCnt="3">
+				<ModPara SlNr="0">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+				<ModPara SlNr="1">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-DM#F_ID_MODULE_DM#F.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+				<ModPara SlNr="2">
+					<ModName ExCRC="1"></ModName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-SPN (32 coils)_ID_MODULE_VALVE32.xml</FDCMLFile>
+					<CEId>ceModule</CEId>
+				</ModPara>
+			</ModParas>
+			<SMParas SMCnt="3">
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="0" ModID="1" ModProp="0">
+							<SMs SMCnt="4">
+								<SMDes SSlNr="1" SMID="1" NdID="46">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="4"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="0"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModule1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32768" SMID="2" NdID="47">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="5"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="1"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModuleInt1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32769" SMID="3" NdID="48">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="6"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="2"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModulePort1</CEId>
+								</SMDes>
+								<SMDes SSlNr="32770" SMID="4" NdID="49">
+									<SMProp Shar="INVALID" SMTyp="NO_IO"></SMProp>
+									<SMElDess ElCnt="2">
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="7"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="3"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\DAP_EX600_20130220-EX600-SPN#_DAP V2.0.xml</FDCMLFile>
+									<CEId>ceSubModulePort2</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="1" ModID="543" ModProp="0">
+							<SMs SMCnt="1">
+								<SMDes SSlNr="1" SMID="0" NdID="59">
+									<SMProp Shar="NO_SHARED_INPUT" SMTyp="IO"></SMProp>
+									<SMElDess ElCnt="6">
+										<SMElDes Intpret="DATA" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="2"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="3"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="0"></SMElDes>
+										<SMElDes Intpret="DATA" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="10"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="11"></SMElDes>
+										<SMElDes Intpret="IOCS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="4"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-DM#F_ID_MODULE_DM#F.xml</FDCMLFile>
+									<CEId>ceModule</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+				<SMPara>
+					<RelAPISMs BlVers="256" RelAPICnt="1">
+						<APISM API="0" SlNr="2" ModID="260" ModProp="0">
+							<SMs SMCnt="1">
+								<SMDes SSlNr="1" SMID="0" NdID="61">
+									<SMProp Shar="INVALID" SMTyp="OUTPUT"></SMProp>
+									<SMElDess ElCnt="3">
+										<SMElDes Intpret="IOCS" Descr="DATA_INPUT" Len="1" SubsMod="NULL_VALUE" Offst="1"></SMElDes>
+										<SMElDes Intpret="DATA" Descr="DATA_OUTPUT" Len="4" SubsMod="NULL_VALUE" Offst="5"></SMElDes>
+										<SMElDes Intpret="IOPS" Descr="DATA_OUTPUT" Len="1" SubsMod="NULL_VALUE" Offst="9"></SMElDes>
+									</SMElDess>
+									<ModName ExCRC="1"></ModName>
+									<ModEquId ExCRC="1"></ModEquId>
+									<FDCMLFile>PROFINET\SMC Corporation\Modules\EX600_20130220-EX600-SPN (32 coils)_ID_MODULE_VALVE32.xml</FDCMLFile>
+									<CEId>ceModule</CEId>
+								</SMDes>
+							</SMs>
+						</APISM>
+					</RelAPISMs>
+				</SMPara>
+			</SMParas>
+			<AlCRParas AlCRCnt="1">
+				<AlCRPara BlVers="256" AlCRPrTp="DATA_RTA_PDU" Prio="USER_PRIORITY" RTATmout="500" Retr="3" LocAlRef="0" MaxAlLen="200"></AlCRPara>
+			</AlCRParas>
+			<DevParas>
+				<DevPara DevID="8" VndID="131" DevIns="1" StatNLen="21" StatN="pnetr12iou.ex600-spn2" IPovDNS="false" UseIODevIpAdr="NO">
+					<IP d1="192" d2="168" d3="10" d4="112"></IP>
+					<Mask d1="255" d2="255" d3="255" d4="0"></Mask>
+					<Gate d1="192" d2="168" d3="10" d4="112"></Gate>
+					<Station ExCRC="1"></Station>
+					<DevName ExCRC="1"></DevName>
+					<ModEquId ExCRC="1"></ModEquId>
+					<FDCMLFile>PROFINET\SMC Corporation\EX600_20130220_EX600-SPN_DAP V2.0.xml</FDCMLFile>
+					<CEId>CommEnt_1</CEId>
+				</DevPara>
+			</DevParas>
+			<ARParas>
+				<ARPara SlNr="1" SSlNr="1" Idx="1" ParaLen="8">
+					<Para>10C0010100000000</Para>
+				</ARPara>
+				<ARPara SlNr="1" SSlNr="1" Idx="2" ParaLen="2">
+					<Para>0000</Para>
+				</ARPara>
+				<ARPara SlNr="1" SSlNr="1" Idx="3" ParaLen="4">
+					<Para>00000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="1" ParaLen="8">
+					<Para>1040000000000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="2" ParaLen="4">
+					<Para>00000000</Para>
+				</ARPara>
+				<ARPara SlNr="2" SSlNr="1" Idx="3" ParaLen="8">
+					<Para>0000000000000000</Para>
+				</ARPara>
+			</ARParas>
+		</AR>
+	</ARs>
+</IPPNIO>

@@ -1,0 +1,38 @@
+MODULE DCiGPS_Configuration(SYSMODULE, NOSTEPIN)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+
+    RECORD DCRobotDefinition
+        string robot_name;
+        num dc_server_port;
+        string egm_udp_device;
+        string dc_running_var_name;
+        string dc_proc_name;
+    ENDRECORD
+    
+    CONST string kDCServerIP := "192.168.0.90"; ! Dynamic Correction Server IP
+    CONST bool kUpdateOfflineData := TRUE; ! Update offline data from the SC server before the DC controller is started
+    CONST bool kDCAlwaysUseOfflineData := FALSE; ! If this is true, the offline data is always used, also on the real robot
+    CONST bool kDCIngoreVirtMode := FALSE; ! If this is true, the virtual controller will also connect to the DC server
+    CONST num kDCDefaultAggressivity := 1; ! Default controller aggressivity (0: LOW, 1: MID, 2: HIGH)
+    CONST dcigps_speedata kDCHoldTargetMoveLSpeed := [10, 1, 1]; ! Speed used for MoveL included in DCiGPSHoldRobTarget
+    
+    ! Global variables used for communication in-between motion and background task
+    !  Flag that indicates if the dynamic correction controller is started in the motion task
+    PERS bool dc_running_11 := FALSE;
+    PERS bool dc_running_12 := FALSE;
+    PERS bool dc_running_21 := FALSE;
+    PERS bool dc_running_22 := FALSE;
+    !  Name of the procedure that is started in the background task while the motion task is running the dc controller
+    PERS string dc_proc_11;
+    PERS string dc_proc_12;
+    PERS string dc_proc_21;
+    PERS string dc_proc_22;
+    
+    ! Definition of robot names, dynamic correction server ports, EGM UDP device names and global variable names.
+    ! The configuration of the EGM UDP devices can be found in Configuration->Communication->Transmission Protocol
+    CONST DCRobotDefinition kDCRobotDefs{4} := 
+        [["Robot11", 30011, "EGMUDPDevice11", "dc_running_11", "dc_proc_11"], 
+         ["Robot12", 30012, "EGMUDPDevice12", "dc_running_12", "dc_proc_12"], 
+         ["Robot21", 30021, "EGMUDPDevice21", "dc_running_21", "dc_proc_21"], 
+         ["Robot22", 30022, "EGMUDPDevice22", "dc_running_22", "dc_proc_22"]]; 
+ENDMODULE

@@ -1,0 +1,31 @@
+MODULE DCiGPS_MotionTaskExample(SYSMODULE)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+    
+    ! RFL Dynamic Correction Motion Task Example
+    PROC RFLDCMotionTaskExample(string robot_name)          
+        CONST robtarget dcigps_ex_start_target := [[19500, 7000, 2300], [0, 1, 0, 0], [0, 2, 1, 0], [18500, -7000, -4500, 0, 0, 0]];  
+        
+        TPErase;
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+        TPWrite "***                                ***";
+        TPWrite "***     RFL Dynamic Correction     ***";
+        TPWrite "*** - Dynamic Correction Example - ***";
+        TPWrite "***                                ***";
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+        
+        ! Normal movement to the start target
+        TPWrite "Moving to starting position...";
+        MoveJ dcigps_ex_start_target, v150, fine, tool0;
+        TPWrite " Starting position reached.";
+        
+        ! Start RFL Dynamic Correction Controller which takes over control of the motion task.
+        ! The commands are then sent from the specified procedure "RFLDCProcExample" in the background task. 
+        TPWrite "Starting RFL DC Controller...";
+        DCiGPSStartController robot_name, \tool_load := tool0.tload, "RFLDCProcExample", \error_ui:=TRUE;        
+        
+        TPWrite " Motion task finished."; 
+    ENDPROC
+    
+ENDMODULE

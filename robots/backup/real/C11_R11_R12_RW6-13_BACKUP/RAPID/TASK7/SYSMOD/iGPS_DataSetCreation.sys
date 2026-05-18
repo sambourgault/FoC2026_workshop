@@ -1,0 +1,92 @@
+MODULE iGPS_DataSetCreation(SYSMODULE)
+    ! The documentation can be found in the wiki on https://bitbucket.org/ethrfl/adrl-rfl-static-correction/
+    
+    LOCAL PERS wobjdata dsc_wobj_base := [FALSE, FALSE, "", [[0, 0, 0],[1, 0, 0, 0]],[[0, 0, 0],[1, 0, 0, 0]]]; 
+    LOCAL PERS tooldata dsc_tool := [TRUE, [[0, 0, 0], [1, 0, 0 ,0]], [0.001, [0, 0, 0.001], [1, 0, 0, 0], 0, 0, 0]];
+    
+    ! RFL Static Correction: Data Set Creation
+    PROC DataSetCreation(string robot_name)       
+        VAR socketdev data_set_creation_socket;
+        
+        VAR num dsc_robot_index;
+        VAR num dsc_msg_type_rcv;
+        VAR num calib_target_num_recv;
+        VAR rawbytes dsc_raw_message_recv;
+        VAR rawbytes dsc_raw_message_sent;
+        VAR MSG_RFL_CALIB_JOINTS rfl_calib_joints_msg;
+        VAR MSG_RFL_CALIB_POSE_FEEDBACK rfl_calib_pose_feedback_msg;
+        
+        AccSet 50, 20 \FinePointRamp:=20;
+        
+        TPErase;
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+        TPWrite "***                                ***";
+        TPWrite "***     RFL Static Correction      ***";
+        TPWrite "***     - Data Set Creation -      ***";
+        TPWrite "***                                ***";
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+        
+        ! Find robot index
+        IF FindRobotIndex(robot_name, dsc_robot_index) = FALSE THEN
+            TPWrite "ERROR: Robot name not available!";
+            RETURN;
+        ENDIF
+        
+        ! Set base workobject
+        dsc_wobj_base := wobj0;
+        dsc_wobj_base.ufprog := FALSE;
+        dsc_wobj_base.ufmec := kRobotDefs{dsc_robot_index}.ufmec;  
+        
+        ! Set tool
+        dsc_tool := tool0;
+        dsc_tool.tload := kDSCLoadData;
+        
+        ! Setting up a TCP/IP client to communicate with server
+        TPWrite "Configured Server: " + kiGPSServerIP + ":" + ValToStr(kDSCPort);
+        TPWrite "Connecting to server"  + "...";
+        SetupTCPIPClient data_set_creation_socket, kiGPSServerIP, kDSCPort;
+        TPWrite " Connection established.";
+        TPWrite "Waiting for calibration target...";
+        
+        WHILE TRUE DO
+            ! Receive calibration target message from server
+            ReceiveMessage data_set_creation_socket, dsc_msg_type_rcv, dsc_raw_message_recv;
+            
+            IF (dsc_msg_type_rcv = 3) THEN
+                ! Unpack RFLCalibJoints message 
+                UnpackMSGRFLCalibJoints dsc_raw_message_recv, rfl_calib_joints_msg;
+                calib_target_num_recv := rfl_calib_joints_msg.header.msg_counter;
+                TPWrite "**************************************";
+                TPWrite " Received calibration target " + ValToStr(calib_target_num_recv); 
+                
+                ! Move robot to calibration target
+                TPWrite "Moving to calibration target...";
+                MoveAbsJ rfl_calib_joints_msg.rfl_calib_joints, kDSCSpeed, fine, dsc_tool;
+                
+                ! Get current end effector pose relative to world and robot base   
+                TPWrite "Getting and sending robot feedback..."; 
+                WaitTime 1;
+                
+                rfl_calib_pose_feedback_msg.end_effector_world := CPoseT(dsc_tool, wobj0);
+                rfl_calib_pose_feedback_msg.end_effector_base := CPoseT(dsc_tool, dsc_wobj_base);
+                
+                ! Pack RFLCalibPoseFeedback message.
+                PackMSGRFLCalibPoseFeedback rfl_calib_pose_feedback_msg, calib_target_num_recv, dsc_raw_message_sent;
+                
+                ! Send back current end effector pose relative to world and robot base
+                SendMessage data_set_creation_socket, dsc_raw_message_sent;
+                TPWrite " Feedback sent.";
+                TPWrite "Waiting for calibration target...";
+            ELSE
+                TPWrite "WARNING: Received wrong message index!";
+            ENDIF
+        ENDWHILE
+        
+        ! Close TCP/IP client
+        CloseTCPIPClient data_set_creation_socket;
+        TPWrite "TCP/IP socket closed.";
+    ENDPROC
+    
+ENDMODULE

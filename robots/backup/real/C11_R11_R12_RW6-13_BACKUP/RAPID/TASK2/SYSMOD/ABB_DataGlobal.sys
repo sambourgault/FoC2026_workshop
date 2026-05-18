@@ -1,0 +1,104 @@
+MODULE ABB_DataGlobal(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL_ABB
+    !
+    ! FUNCTION    :  Includ all Global Data's for Project
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2021.03.30
+    !
+    ! Copyright   :  ETH Zurich (CH) 2021
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Declaration :     bool
+    !************************************************
+    !
+    PERS bool b_ABB_System_C11_Active;
+    PERS bool b_ABB_System_C12_Active;
+    PERS bool b_ABB_System_C21_Active;
+    PERS bool b_ABB_System_C22_Active;
+    !
+    PERS bool b_ABB_BrakeCheckOn_R11_Active;
+    PERS bool b_ABB_BrakeCheckOn_R12_Active;
+    PERS bool b_ABB_BrakeCheckOn_R21_Active;
+    PERS bool b_ABB_BrakeCheckOn_R22_Active;
+    !
+    PERS bool b_ABB_BrakeCheck11Active;
+    PERS bool b_ABB_BrakeCheck12Active;
+    PERS bool b_ABB_BrakeCheck21Active;
+    PERS bool b_ABB_BrakeCheck22Active;
+    !
+    !--MANUELL setzten: Bewegungsschrittlänge [mm] für Crane1  (Gantry X-Achse)
+    PERS bool b_ABB_SysWith4Rob;
+
+    !************************************************
+    ! Declaration :     num
+    !************************************************
+    !
+    PERS num n_ABB_CraneMoveStepLow;
+    PERS num n_ABB_CraneMoveStepHigh;
+    PERS num n_ABB_CraneOverride;
+    PERS num n_ABB_CraneMaxTCP;
+    PERS num n_ABB_CraneAcc;
+    PERS num n_ABB_CraneRamp;
+    PERS num n_ABB_CraneCycleTime;
+    !
+    !--MANUELL setzen: Geschwindigkeit für Gantry-X-Achse [mm/s]
+    PERS num n_ABB_CraneX_LowSpeed;
+    PERS num n_ABB_CraneX_HighSpeed;
+
+    !************************************************
+    ! Declaration :     speeddata
+    !************************************************
+    !
+    PERS speeddata v_ABB_CraneLow;
+    PERS speeddata v_ABB_CraneHigh;
+    PERS speeddata v_ABB_CraneAct;
+
+    !************************************************
+    ! Declaration :     tasks
+    !************************************************
+    !
+    PERS tasks tl_ABB_CtrlRob{7};
+
+    !************************************************
+    ! Declaration :     syncident
+    !************************************************
+    !
+    VAR syncident id_ABB_ExampleSta;
+    VAR syncident id_ABB_ExampleEnd;
+    !
+    VAR syncident id_ABB_CraneSta;
+    VAR syncident id_ABB_ParkPosRob1;
+    VAR syncident id_ABB_ParkPosRob2;
+    VAR syncident id_ABB_ParkPosRob3;
+    VAR syncident id_ABB_ParkPosRob4;
+    VAR syncident id_ABB_CraneModeReady;
+    VAR syncident id_ABB_CraneModeOn;
+    VAR syncident id_ABB_CraneModeOff;
+    VAR syncident id_ABB_CraneEnd;
+    ! 
+    VAR syncident id_ABB_CalibPosSta;
+    VAR syncident id_ABB_CalibPosEnd;
+    ! 
+    VAR syncident id_ABB_RefPosSta;
+    VAR syncident id_ABB_RefPosEnd;
+    !
+    VAR syncident id_ABB_BrakeCheckStart;
+    VAR syncident id_ABB_BrakeCheckInPos;
+    VAR syncident id_ABB_BrakeCheckDone;
+    VAR syncident id_ABB_BrakeCheckEnd;
+
+ENDMODULE

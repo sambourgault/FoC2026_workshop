@@ -1,0 +1,43 @@
+MODULE DCiGPS_IMUCalib(SYSMODULE)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+    LOCAL CONST num num_targets := 10;
+    LOCAL CONST speeddata robot_speed := v300;
+    LOCAL PERS tooldata robot_tool := [ TRUE, [[0, 0, 0], [1, 0, 0 ,0]], [7.5, [-10, 0, 30], [1, 0, 0, 0], 0, 0, 0]];
+    LOCAL CONST zonedata robot_zone := z50;
+    
+    ! Used base position
+    LOCAL CONST extjoint base_position := [8200, -8200, -4500, 0, 0, 0];
+    
+    ! Jointtargets for teaching robjoints. (Just robjoints are used later)
+    LOCAL PERS jointtarget joint_targets{num_targets} :=
+    [[[0.0897104,-38.0216,-9.89506,-0.0401217,-42.2393,-180.055],[8200,-8200,-4500,0,0,0]],
+        [[0.089882,-31.6745,-9.89925,28.439,-48.2896,-156.474],[8200,-8200,-4500,0,0,0]],
+        [[20.2371,-31.2111,-9.89936,-49.8254,-48.2783,-217.499],[8200,-8200,-4500,0,0,0]],
+        [[20.2364,-40.3508,-9.90404,-11.9477,-53.6246,-194.585],[8200,-8200,-4500,0,0,0]],
+        [[7.95216,-40.3511,-0.843553,18.3076,-4.58135,-235.703],[8200,-8200,-4500,0,0,0]],
+        [[7.95281,-44.0535,-0.403051,0.679391,-58.8703,-270.212],[8200,-8200,-4500,0,0,0]],
+        [[6.23527,-34.6956,-8.93159,-52.8165,-64.5822,-189.198],[8200,-8200,-4500,0,0,0]],
+        [[3.57637,-30.8951,-15.887,17.4604,-64.5828,-166.794],[8200,-8200,-4500,0,0,0]],
+        [[3.57646,-28.8223,-10.1397,46.3387,-53.0877,-152.572],[8200,-8200,-4500,0,0,0]],
+        [[-7.48657,-31.007,-14.3282,67.8316,-47.0036,-103.585],[8200,-8200,-4500,0,0,0]]];
+
+    PROC RFLDCiGPSIMUCalibration()
+        AccSet 100, 100 \FinePointRamp:=20;
+        ApplyBasePosition;
+        
+        MoveAbsJ joint_targets{1}, robot_speed, fine, robot_tool;
+    
+        FOR i FROM 2 TO num_targets DO
+            MoveAbsJ joint_targets{i}, robot_speed, robot_zone, robot_tool;
+        ENDFOR
+        
+        MoveAbsJ joint_targets{1}, robot_speed, fine, robot_tool;
+    ENDPROC
+    
+    LOCAL PROC ApplyBasePosition()
+        FOR i FROM 1 TO num_targets DO
+            joint_targets{i}.extax := base_position;            
+        ENDFOR
+    ENDPROC
+    
+ENDMODULE

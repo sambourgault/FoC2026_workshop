@@ -1,0 +1,39 @@
+MODULE ABB_DataTask_Ctrl(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL_ABB
+    !
+    ! FUNCTION    :  Includ all Task Data's for Project
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2021.03.30
+    !
+    ! Copyright   :  ETH Zurich (CH) 2021
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Declaration :     string
+    !************************************************
+    !
+    ! Button Array max 5 Items
+    CONST string st_ABB_BtnExit{1}:=["Exit"];
+    CONST string st_ABB_BtnOkExit{2}:=["Ok","Exit"];
+    CONST string st_ABB_BtnToPos{4}:=["X","Y","Z","Exit"];
+
+    !************************************************
+    ! Declaration :     btnres
+    !************************************************
+    !
+    TASK PERS btnres btr_ABB_Answer:=1;
+
+ENDMODULE

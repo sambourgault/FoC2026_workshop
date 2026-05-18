@@ -1,0 +1,71 @@
+MODULE RFL_TaskData_11B(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL
+    !
+    ! FUNCTION    :  Includ all Task specific Data's for ETH Helper
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2016.08.09 Draft
+    !
+    ! Copyright   :  ETH Zurich (CH) 2016
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Declaration :     bool
+    !************************************************
+    !
+
+    !************************************************
+    ! Declaration :     num
+    !************************************************
+    !
+    ! Use for all Uilists
+    TASK PERS num nUiListItem:=2;
+    !
+
+    !************************************************
+    ! Declaration :     string
+    !************************************************
+    !
+    ! Button Array max 5 Items
+    CONST string stBtnExit{1}:=["Exit"];
+    CONST string stBtnOkExit{2}:=["Ok","Exit"];
+    CONST string stBtnToPos{4}:=["X","Y","Z","Exit"];
+    !
+    CONST string stiGPSRobName:="Robot11";
+    !
+
+    !************************************************
+    ! Declaration :     listitem
+    !************************************************
+    !
+
+    !************************************************
+    ! Declaration :     btnres
+    !************************************************
+    !
+    TASK PERS btnres btnAnswer:=0;
+
+    !************************************************
+    ! Declaration :     tooldata
+    !************************************************
+    !
+
+    !************************************************
+    ! Declaration :     wobjdata
+    !************************************************
+    !
+
+
+    ENDMODULE

@@ -1,0 +1,559 @@
+MODULE ABB_Features_Ctrl(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL_ABB
+    !
+    ! FUNCTION    :  Job Routines for ABB 
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2017.07.06 Draft
+    !
+    ! Copyright   :  ETH Zurich (CH) 2017
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Function    :     Example form ABB
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2016.08.11
+    ! **************** ETH Zurich *******************
+    !
+    PROC r_ABB_Example()
+        !
+        WaitSyncTask id_ABB_ExampleSta,tl_ABB_CtrlRob;
+        !
+        ! Temp Msg for Operator
+        TPWrite "Controller in ABB Example";
+        !
+        ! Placeholder for Master Code 
+        ! 
+        WaitSyncTask id_ABB_ExampleEnd,tl_ABB_CtrlRob;
+        !
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+    !************************************************
+    ! Function    :     Calibration form ABB
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2016.08.11
+    ! **************** ETH Zurich *******************
+    !
+    PROC r_ABB_MoveToCalibPos()
+        !
+        WaitSyncTask id_ABB_CalibPosSta,tl_ABB_CtrlRob;
+        !
+        ! Temp Msg for Operator
+        TPWrite "Controller in ABB Move to calibration position";
+        !
+        ! Placeholder for Master Code 
+        ! 
+        WaitSyncTask id_ABB_CalibPosEnd,tl_ABB_CtrlRob;
+        !
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+    !************************************************
+    ! Function    :     Refernce position form ABB
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2021.03.29
+    ! **************** ETH Zurich *******************
+    !
+    PROC r_ABB_MoveToRefPos()
+        !
+        WaitSyncTask id_ABB_RefPosSta,tl_ABB_CtrlRob;
+        !
+        ! Temp Msg for Operator
+        TPWrite "Controller in ABB move to reference position";
+        !
+        ! Placeholder for Master Code 
+        ! 
+        WaitSyncTask id_ABB_RefPosEnd,tl_ABB_CtrlRob;
+        !
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+    !************************************************
+    ! Function    :     Brake-Check form ABB
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2017.07.06
+    ! **************** ETH Zurich *******************
+    !
+    PROC r_ABB_MoveToBrakeCheckPos()
+        VAR bool bCancel;
+        VAR bool bCheckZAxis;
+        VAR bool bCheckSuccessfull;
+        VAR string stSelection{4};
+        VAR string stMsgArry{5};
+        VAR string stBtnArry{5};
+        !
+        ! Init Var
+        btr_ABB_Answer:=0;
+        !
+        ! Update text and button for 11
+        IF b_ABB_BrakeCheckOn_R11_Active THEN
+            !
+            ! Activate text and button
+            stMsgArry{2}:="["+stSelection{1}+"] Robot 11";
+            stBtnArry{1}:="Rob11";
+        ELSE
+            !
+            ! Deactivate text and button
+            stMsgArry{2}:="";
+            stBtnArry{1}:="";
+            !
+            ! Deactivat brake check 
+            b_ABB_BrakeCheck11Active:=FALSE;
+        ENDIF
+        !
+        ! Update text and button for 12
+        IF b_ABB_BrakeCheckOn_R12_Active THEN
+            !
+            ! Activate text and button
+            stMsgArry{3}:="["+stSelection{1}+"] Robot 12";
+            stBtnArry{2}:="Rob12";
+        ELSE
+            !
+            ! Deactivate text and button
+            stMsgArry{3}:="";
+            stBtnArry{2}:="";
+            !
+            ! Deactivat brake check 
+            b_ABB_BrakeCheck12Active:=FALSE;
+        ENDIF
+        !
+        ! Update text and button for 21
+        IF b_ABB_BrakeCheckOn_R21_Active THEN
+            !
+            ! Activate text and button
+            stMsgArry{4}:="["+stSelection{1}+"] Robot 21";
+            stBtnArry{3}:="Rob21";
+        ELSE
+            !
+            ! Deactivate text and button
+            stMsgArry{4}:="";
+            stBtnArry{3}:="";
+            !
+            ! Deactivat brake check 
+            b_ABB_BrakeCheck21Active:=FALSE;
+        ENDIF
+        !
+        ! Update text and button for 22
+        IF b_ABB_BrakeCheckOn_R22_Active THEN
+            !
+            ! Activate text and button
+            stMsgArry{5}:="["+stSelection{1}+"] Robot 22";
+            stBtnArry{4}:="Rob22";
+        ELSE
+            !
+            ! Deactivate text and button
+            stMsgArry{5}:="";
+            stBtnArry{4}:="";
+            !
+            ! Deactivat brake check 
+            b_ABB_BrakeCheck22Active:=FALSE;
+        ENDIF
+        !
+        ! Set default text and button
+        stMsgArry{1}:="Select the checked Robot";
+        stBtnArry{5}:="Ok";
+        !
+        ! Loop for User Window
+        WHILE btr_ABB_Answer<>5 DO
+            !
+            ! Check Selection 11
+            IF b_ABB_BrakeCheck11Active THEN
+                !
+                ! Activ
+                stSelection{1}:="X";
+            ELSE
+                !
+                ! Passiv
+                stSelection{1}:=" ";
+            ENDIF
+            !
+            ! Check Selection 12
+            IF b_ABB_BrakeCheck12Active THEN
+                !
+                ! Activ
+                stSelection{2}:="X";
+            ELSE
+                !
+                ! Passiv
+                stSelection{2}:=" ";
+            ENDIF
+            !
+            ! Check Selection 21
+            IF b_ABB_BrakeCheck21Active THEN
+                !
+                ! Activ
+                stSelection{3}:="X";
+            ELSE
+                !
+                ! Passiv
+                stSelection{3}:=" ";
+            ENDIF
+            !
+            ! Check Selection 22
+            IF b_ABB_BrakeCheck22Active THEN
+                !
+                ! Activ
+                stSelection{4}:="X";
+            ELSE
+                !
+                ! Passiv
+                stSelection{4}:=" ";
+            ENDIF
+            !
+            ! Update text with selection
+            IF b_ABB_BrakeCheckOn_R11_Active stMsgArry{2}:="["+stSelection{1}+"] Robot 11";
+            IF b_ABB_BrakeCheckOn_R12_Active stMsgArry{3}:="["+stSelection{2}+"] Robot 12";
+            IF b_ABB_BrakeCheckOn_R21_Active stMsgArry{4}:="["+stSelection{3}+"] Robot 21";
+            IF b_ABB_BrakeCheckOn_R22_Active stMsgArry{5}:="["+stSelection{4}+"] Robot 22";
+            !
+            ! User Msg for Selection
+            btr_ABB_Answer:=UIMessageBox(
+                    \Header:="Brake Check Selection"
+                    \MsgArray:=stMsgArry
+                    \BtnArray:=stBtnArry
+                    \Icon:=iconInfo);
+            !
+            ! Check Anser
+            TEST btr_ABB_Answer
+            CASE 1:
+                !
+                ! Item Rob11
+                b_ABB_BrakeCheck11Active:=NOT b_ABB_BrakeCheck11Active;
+            CASE 2:
+                !
+                ! Item Rob12
+                b_ABB_BrakeCheck12Active:=NOT b_ABB_BrakeCheck12Active;
+            CASE 3:
+                !
+                ! Item Rob21
+                b_ABB_BrakeCheck21Active:=NOT b_ABB_BrakeCheck21Active;
+            CASE 4:
+                !
+                ! Item Rob22
+                b_ABB_BrakeCheck22Active:=NOT b_ABB_BrakeCheck22Active;
+            CASE 5:
+                !
+                ! Item Ok            
+            DEFAULT:
+                !
+                ! Unhandelt situation 
+                r_RFL_ProgError;
+            ENDTEST
+        ENDWHILE
+        !
+        ! Sync with Task
+        WaitSyncTask id_ABB_BrakeCheckStart,tl_ABB_CtrlRob;
+        !
+        ! Temp Msg for Operator
+        TPWrite "Master in ABB Brake-Check";
+        !
+        ! Init Var
+        bCancel:=FALSE;
+        !
+        ! Wait for Robots in brake check position 
+        WaitSyncTask id_ABB_BrakeCheckInPos,tl_ABB_CtrlRob;
+        ! 
+        ! Check robots really in check position
+        bCheckZAxis:=TRUE;
+        IF diBrakeCheck11Sensor=0 AND b_ABB_BrakeCheck11Active bCheckZAxis:=FALSE;
+        IF diBrakeCheck12Sensor=0 AND b_ABB_BrakeCheck12Active bCheckZAxis:=FALSE;
+        IF diBrakeCheck21Sensor=0 AND b_ABB_BrakeCheck21Active bCheckZAxis:=FALSE;
+        IF diBrakeCheck22Sensor=0 AND b_ABB_BrakeCheck22Active bCheckZAxis:=FALSE;
+        !
+        ! Check loop for sensors
+        WHILE (NOT bCheckZAxis) AND bCancel=FALSE DO
+            !
+            ! Msg not ready 
+            UIMsgBox
+                \Header:="Brake Check Error","Z Axis not at the top position"
+                \MsgLine2:="Please stopp and inform the Technicians"
+                \Buttons:=btnOKCancel
+                \Icon:=iconError
+                \Result:=btr_ABB_Answer;
+            !
+            ! Check User answer cancel
+            IF btr_ABB_Answer=resCancel THEN
+                !
+                ! Store Cancel 
+                bCancel:=TRUE;
+            ELSE
+                !
+                ! Stop all normal Tasks
+                Stop\AllMoveTasks;
+            ENDIF
+            !
+            ! Check robots really in check position
+            bCheckZAxis:=TRUE;
+            IF diBrakeCheck11Sensor=0 AND b_ABB_BrakeCheck11Active bCheckZAxis:=FALSE;
+            IF diBrakeCheck12Sensor=0 AND b_ABB_BrakeCheck12Active bCheckZAxis:=FALSE;
+            IF diBrakeCheck21Sensor=0 AND b_ABB_BrakeCheck21Active bCheckZAxis:=FALSE;
+            IF diBrakeCheck22Sensor=0 AND b_ABB_BrakeCheck22Active bCheckZAxis:=FALSE;
+        ENDWHILE
+        !
+        ! Ready for brake check
+        IF bCancel=FALSE THEN
+            !
+            ! Msg Ready for Brake Check
+            UIMsgBox
+                \Header:="System ready for Brake-Check","Please push the OK Butten and"
+                \MsgLine2:="then the Brake-Check will start."
+                \MsgLine3:=""
+                \MsgLine4:="The Brake-Check is finish when the flashlight is off."
+                \MsgLine5:=""
+                \Buttons:=btnOK
+                \Icon:=iconInfo
+                \Result:=btr_ABB_Answer;
+            !
+            ! Check activated R11
+            IF b_ABB_BrakeCheck11Active=TRUE THEN
+                ! Activate brake check R11
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck11Ch1;
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck11Ch2;
+            ENDIF
+            !
+            ! Check activated R12
+            IF b_ABB_BrakeCheck12Active=TRUE THEN
+                ! Activate brake check R12
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck12Ch1;
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck12Ch2;
+            ENDIF
+            !
+            ! Check activated R21
+            IF b_ABB_BrakeCheck21Active=TRUE THEN
+                ! Activate brake check R11
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck21Ch1;
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck21Ch2;
+            ENDIF
+            !
+            ! Check activated R22
+            IF b_ABB_BrakeCheck22Active=TRUE THEN
+                ! Activate brake check R12
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck22Ch1;
+                PulseDO\PLength:=1,doStartCyclicBrakeCheck22Ch2;
+            ENDIF
+            !
+            ! Send Motor off for Controller
+            IF b_ABB_System_C11_Active SetDo doMotorOffBrakeCheckC11,1;
+            IF b_ABB_System_C12_Active SetDo doMotorOffBrakeCheckC12,1;
+            IF b_ABB_System_C21_Active SetDo doMotorOffBrakeCheckC21,1;
+            IF b_ABB_System_C22_Active SetDo doMotorOffBrakeCheckC22,1;
+            !
+            ! Stop all normal Tasks
+            Stop\AllMoveTasks;
+            !
+            ! Reset signal for Motor off
+            IF b_ABB_System_C11_Active SetDo doMotorOffBrakeCheckC11,0;
+            IF b_ABB_System_C12_Active SetDo doMotorOffBrakeCheckC12,0;
+            IF b_ABB_System_C21_Active SetDo doMotorOffBrakeCheckC21,0;
+            IF b_ABB_System_C22_Active SetDo doMotorOffBrakeCheckC22,0;
+        ENDIF
+        ! 
+        ! Check brake check successfull
+        bCheckSuccessfull:=TRUE;
+        IF diBrakeCheck11Successfull=0 AND b_ABB_BrakeCheck11Active bCheckSuccessfull:=FALSE;
+        IF diBrakeCheck12Successfull=0 AND b_ABB_BrakeCheck12Active bCheckSuccessfull:=FALSE;
+        IF diBrakeCheck21Successfull=0 AND b_ABB_BrakeCheck21Active bCheckSuccessfull:=FALSE;
+        IF diBrakeCheck22Successfull=0 AND b_ABB_BrakeCheck22Active bCheckSuccessfull:=FALSE;
+        !
+        ! Check loop for successful
+        WHILE bCheckSuccessfull=FALSE AND bCancel=FALSE DO
+            !
+            ! Msg not ready 
+            UIMsgBox
+                \Header:="Brake Check Error","Check not successfull"
+                \MsgLine2:="Please stopp and inform the Technicians"
+                \Buttons:=btnOKCancel
+                \Icon:=iconError
+                \Result:=btr_ABB_Answer;
+            !
+            ! Check User answer cancel
+            IF btr_ABB_Answer=resCancel THEN
+                !
+                ! Store Cancel 
+                bCancel:=TRUE;
+            ELSE
+                !
+                ! Stop all normal Tasks
+                Stop\AllMoveTasks;
+            ENDIF
+            !
+        ENDWHILE
+        !
+        ! Sync with Robots in brake-check position 
+        WaitSyncTask id_ABB_BrakeCheckDone,tl_ABB_CtrlRob;
+        !
+        ! 
+        WaitSyncTask id_ABB_BrakeCheckEnd,tl_ABB_CtrlRob;
+        !
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+    !***********************************************************************************
+    !   [ Modul für Roboter T_ROB21 ]
+    !   Routinen und Daten betreffend der Manueller Crane Function
+    !***********************************************************************************
+    !
+    !  Stand:  BUT/2016-08-18
+    !
+    !   --------------------------
+    !-- Beschreibung der Funktion:
+    !   --------------------------
+    !
+    !  Diese Funktion ist in den folgenden 2 System Konfigurationsvarianten fahrbar:
+    !        Für VARIANTE 1:  1 MultiMove System  mit    4 Roboter
+    !        Für VARIANTE 2:  2 MultiMove Systeme mit je 2 Roboter
+    !
+    !
+    !  Wenn der Kunde (ETH) den Kran verwenden will, dann kann die Y- und Z- Richung des Kranes direkt über die autonome Kransteuerung verfahren werden
+    !  Die X-Richtung kann nicht vom Kran selber gefahren werden, da die Kran Linearachse an der Brücke des Portals befestigt ist (Portal-X-Achse)
+    !  Aus diesem Grunde muss die Robotersteurung  (Portal) die X-Achse bewegen auf Anforderung der Kransteuerung
+    !
+    !  Ablauf:
+    !  Grundbedingung:     Die 4 Roboter inkl. Portal Y- und Z-Achse müssen in der ParkPos stehen
+    !                      PS:  Diese CraneFunction läuft im Automatikbetrieb des Roboters   PZ --> Main
+    !
+    !  1. Anforderungssignal der Kransteuerung(en)   "diCraneModeStart"
+    !  2. Jeder Roboter prüft nun ob er nun in Parkpos steht oder nahe der Parkpos. Wenn JA fährt die Robotersteurung den Roboter
+    !     in seine Parkpos auf direktem Weg von der aktuellen Position.
+    !     Steht der Roboter nicht genügend nahe an der Parkposition, dann erscheint das Abfragemenu, ob er automatisch oder manuell 
+    !     in die Parkposition gefahren werden soll. Wenn AUTO gewählt, fährt der Roboter auf direktem Weg von der akt. Positon zur 
+    !     Parkposition. Wenn MANUELL gewählt, muss der Bediener den Roboter in die Nähe der Parkpos bewegen  mittels JoyStick
+    ! 
+    ! 3. Wenn alle Roboter in Parkposition stehen, setzt das Robotersystem das Signal(e) "doCrane1ModeActive", "doCrane2ModeActive" an die SPS. 
+    !    Diese bleiben nun dauernd anstehen
+    !
+    ! 4. Nun wartet die Robotersteuerung auf die Bewegungs-Anforderungssignale für Fahrbewegung X für  Crane1 und/oder Crane2 (+/-)
+    !    sowie Prüfung des Signals Speed Level Signal  di_Crane1_Level2  (wenn =1 dann schnellere Geschw. wenn=0, dann langsamere Geschw. )
+    !
+    !--Signale:
+    !==========
+    !  diCraneModeStart   (Kran Funktion Aktiv  --von Kransteuerung )
+    !  diCrane1MoveXPos      (Kran 1 in positver  X-Richrung verfahren)  (11)
+    !  diCrane1MoveXNeg      (Kran 1 in negativer X-Richrung verfahren)  (11)
+    !  diCrane1MoveLevel2    Höhere Geschwindigkeitslevel für Kran1
+    !
+    !  diCrane2MoveXPos     (Kran 1 in positver  X-Richrung verfahren)  (21)
+    !  diCrane2MoveXNeg     (Kran 1 in negativer X-Richrung verfahren)  (21)
+    !  diCrane2MoveLevel2    Höhere Geschwindigkeitslevel für Kran2
+    !
+    !  doCrane1ModeActive  Roboter Rob11 und Rob12 stehen in Parkposition incl. Gantry Y-Z (exkl. Gantry-X-Achse)
+    !  doCrane2ModeActive   Roboter Rob21 und Rob22 stehen in Parkposition incl. Gantry Y-Z (exkl. Gantry-X-Achse)
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Function    :     Crane Function form ABB
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2016.08.11
+    ! **************** ETH Zurich *******************
+    !
+    PROC r_ABB_CraneFunction()
+        !
+        ! Wait for crane mode start
+        WaitSyncTask id_ABB_CraneSta,tl_ABB_CtrlRob;
+        !
+        ! Msg for Operator
+        TPWrite "Controller in ABB Crane";
+        !
+        ! Update speed parameters 
+        v_ABB_CraneLow.v_tcp:=n_ABB_CraneX_LowSpeed;
+        v_ABB_CraneHigh.v_tcp:=n_ABB_CraneX_HighSpeed;
+        v_ABB_CraneLow.v_leax:=n_ABB_CraneX_LowSpeed;
+        v_ABB_CraneHigh.v_leax:=n_ABB_CraneX_HighSpeed;
+        !
+        ! Wait until rob 1 in park position
+        WaitSyncTask id_ABB_ParkPosRob1,tl_ABB_CtrlRob;
+        !
+        ! Wait until rob 2 in park position
+        WaitSyncTask id_ABB_ParkPosRob2,tl_ABB_CtrlRob;
+        !
+        ! Wait until rob 3 in park position
+        IF b_ABB_SysWith4Rob=TRUE WaitSyncTask id_ABB_ParkPosRob3,tl_ABB_CtrlRob;
+        !
+        ! Wait until rob 4 in park position
+        IF b_ABB_SysWith4Rob=TRUE WaitSyncTask id_ABB_ParkPosRob4,tl_ABB_CtrlRob;
+        !
+        ! Msg to user ready for crane mode 
+        UIMsgBox
+                \Header:="System is ready for crane mode","Follow the instructions on the FlexPendant"
+                \MsgLine2:="to activate the crane mode on the main cabinet."
+                \MsgLine3:=""
+                \MsgLine4:="Continue with OK."
+                \MsgLine5:=""
+                \Buttons:=btnOK
+                \Icon:=iconInfo
+                \Result:=btr_ABB_Answer;
+        !
+        ! User has confirmated 
+        WaitSyncTask id_ABB_CraneModeReady,tl_ABB_CtrlRob;
+        !
+        ! Write activations steps on FlexPendant
+        TPErase;
+        TPWrite "1. Log in as admin and open crane window";
+        TPWrite "2. Activate crane mode";
+        TPWrite "3. Get safety access";
+        TPWrite "4. Confirm robots in park postiotion";
+        TPWrite "6. Release safety access";
+        TPWrite "7. Switch robot system to automatic mode";
+        TPWrite "8. Press the reset on the main cabinet";
+        TPWrite "9. MotorOn and PLAY on the FlexPendant";
+        !
+        ! Stop to switch to automatic mode
+        Stop\AllMoveTasks;
+        !
+        ! Wait until crane mode is activated on HMI
+        WaitSyncTask id_ABB_CraneModeOn,tl_ABB_CtrlRob;
+        !
+        ! Msg system in crane mode 
+        UIMsgBox
+                \Header:="System is in crane mode","Use the crane remote to operate."
+                \MsgLine2:=""
+                \MsgLine3:="Press OK to exit crane mode and follow the"
+                \MsgLine4:="instructions on the FlexPendant to deactivate"
+                \MsgLine5:="the crane mode on the main cabinet."
+                \Buttons:=btnOK
+                \Icon:=iconInfo
+                \Result:=btr_ABB_Answer;
+        !
+        ! Write deactivations steps on FlexPendant
+        TPErase;
+        TPWrite "0. Turn off crane remote";
+        TPWrite "1. Log in as admin and open crane window";
+        TPWrite "2. Dectivate crane mode";
+        TPWrite "3. Get safety access";
+        TPWrite "4. Confirm crane hooks in top postiotion";
+        TPWrite "5. Release safety access";
+        TPWrite "6. Switch robot system to manual mode";
+        TPWrite "7. DEADMAN and PLAY on the FlexPendant";
+        !
+        ! Stop to switch to automatic mode
+        Stop;
+        !
+        ! Wait until crane mode is deactivated on HMI
+        WaitSyncTask id_ABB_CraneModeOff,tl_ABB_CtrlRob;
+        !
+        ! Wait for crane mode end
+        WaitSyncTask id_ABB_CraneEnd,tl_ABB_CtrlRob;
+        RETURN ;
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+ENDMODULE

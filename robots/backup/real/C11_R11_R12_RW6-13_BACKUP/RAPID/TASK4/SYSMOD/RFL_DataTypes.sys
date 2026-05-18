@@ -1,0 +1,38 @@
+MODULE RFL_DataTypes(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL
+    !
+    ! FUNCTION    :  Record new data types for RFL and DFAB
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2018.02.03 Draft
+    !
+    ! Copyright   :  ETH Zurich (CH) 2018
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Record smsg   
+    !************************************************
+    !
+    RECORD smsg
+        string Header;
+        string Line1;
+        string Line2;
+        string Line3;
+        string Line4;
+        string Line5;
+        string Button;
+        string Image;
+    ENDRECORD
+ENDMODULE

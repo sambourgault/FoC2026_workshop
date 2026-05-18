@@ -1,0 +1,168 @@
+MODULE DCiGPS_MSGHandling(SYSMODULE, NOSTEPIN)
+   
+    ! **************************************************************************
+    ! Messages used for TCP/IP communication with RFL Dynamic Correction Server:
+    ! 0: INVALID
+    ! 1: EMPTY
+    ! 2: RFL_DC_STOP_CNTRL
+    ! 3: RFL_DC_MOVEMENT_FINISHED
+    ! 4: RFL_DC_MOVE_CMD
+    ! 5: RFL_DC_CNTRL_AGGR
+    ! 
+    ! Message Structure: 
+    ! length (8 bytes) + header (20 bytes) + content
+    ! **************************************************************************
+    
+    ! Message RFLDCStopCntrl (Type = 2)
+    RECORD  MSG_RFL_DC_STOP_CNTRL
+        MSG_HEADER header;
+        num status; ! 0: running, 1: stopped
+    ENDRECORD
+    
+    ! Message RFLDCMovementFinished (Type = 3)
+    RECORD MSG_RFL_DC_MOVEMENT_FINISHED
+        MSG_HEADER header;
+        num dc_error_code;
+        string dc_error_msg; ! max kStrBuffLen characters
+    ENDRECORD
+    
+    ! Message RFLDCMoveCmd (Type = 4)
+    RECORD MSG_RFL_DC_MOVE_CMD
+        MSG_HEADER header;
+        pose end_effector_1;
+        pose end_effector_2;
+        string tool; ! max kStrBuffLen characters
+        string wobj; ! max kStrBuffLen characters
+        num v_lin;
+        num v_ang;
+        num acc_time;
+        num path_type; ! 0: Invalid, 1: MoveL, 2: MoveC
+        num end_point_type; ! 0: fly-by point, 1: Stop point
+        num recover_path; ! 0: false, 1: true
+        num hold_pose_time;
+    ENDRECORD
+    
+    ! Message RFLDCStopCntrl (Type = 5)
+    RECORD  MSG_RFL_DC_CNTRL_AGGR
+        MSG_HEADER header;
+        num aggressivity; ! 0: LOW, 1: MID, 2: HIGH
+    ENDRECORD
+    
+    ! Buffer length used for strings
+    CONST num kDCStrBuffLen := 40;
+    
+    ! Unpack message RFL_DC_STOP_CNTRL (length: 29 bytes)
+    PROC UnpackMSGRFLDCStopCntrl(VAR rawbytes raw_message, VAR MSG_RFL_DC_STOP_CNTRL rfl_dc_stop_cntrl_msg)
+        rfl_dc_stop_cntrl_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(2, rfl_dc_stop_cntrl_msg.header.msg_type, "UnpackMSGRFLDCStopCntrl") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_dc_stop_cntrl_msg.status, \IntX:=USINT;
+    ENDPROC
+    
+    ! Unpack message RFL_DC_MOVEMENT_FINISHED (length: 70 bytes)
+    PROC UnpackMSGRFLDCMovementFinished(VAR rawbytes raw_message, VAR MSG_RFL_DC_MOVEMENT_FINISHED rfl_dc_movement_finished_msg)
+        rfl_dc_movement_finished_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(3, rfl_dc_movement_finished_msg.header.msg_type, "UnpackMSGRFLDCMovementFinished") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_dc_movement_finished_msg.dc_error_code, \IntX:=USINT;
+        rfl_dc_movement_finished_msg.dc_error_msg := UnpackString(raw_message, 30); 
+    ENDPROC
+    
+    ! Unpack message RFL_DC_MOVE_CMD (length: 185 bytes)
+    PROC UnpackMSGRFLDCMoveCmd(VAR rawbytes raw_message, VAR MSG_RFL_DC_MOVE_CMD rfl_dc_move_cmd_msg)
+        rfl_dc_move_cmd_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(4, rfl_dc_move_cmd_msg.header.msg_type, "UnpackMSGRFLDCMoveCmd") THEN
+            RETURN;
+        ENDIF
+        rfl_dc_move_cmd_msg.end_effector_1 := UnpackPose(raw_message, 29);
+        rfl_dc_move_cmd_msg.end_effector_2 := UnpackPose(raw_message, 57);
+        rfl_dc_move_cmd_msg.tool := UnpackString(raw_message, 85);
+        rfl_dc_move_cmd_msg.wobj := UnpackString(raw_message, 86 + kStrBuffLen);
+        UnpackRawBytes raw_message, 87 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.v_lin, \Float4;
+        UnpackRawBytes raw_message, 91 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.v_ang, \Float4;
+        UnpackRawBytes raw_message, 95 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.acc_time, \Float4;
+        UnpackRawBytes raw_message, 99 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.path_type, \IntX:=USINT;
+        UnpackRawBytes raw_message, 100 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.end_point_type, \IntX:=USINT;
+        UnpackRawBytes raw_message, 101 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.recover_path, \IntX:=USINT;
+        UnpackRawBytes raw_message, 102 + 2 * kStrBuffLen, rfl_dc_move_cmd_msg.hold_pose_time, \Float4;
+    ENDPROC
+    
+    ! Unpack message RFL_DC_CNTRL_AGGR (length: 29 bytes)
+    PROC UnpackMSGRFLDCCntrlAggr(VAR rawbytes raw_message, VAR MSG_RFL_DC_CNTRL_AGGR rfl_dc_cntrl_aggr_msg)
+        rfl_dc_cntrl_aggr_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(5, rfl_dc_cntrl_aggr_msg.header.msg_type, "UnpackMSGRFLDCCntrlAggr") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_dc_cntrl_aggr_msg.aggressivity, \IntX:=USINT;
+    ENDPROC
+    
+    ! Pack message RFL_DC_STOP_CNTRL (length: 29 bytes)
+    PROC PackMSGRFLDCStopCntrl(MSG_RFL_DC_STOP_CNTRL rfl_dc_stop_cntrl_msg, VAR rawbytes raw_message)
+        VAR num message_length := 29 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_dc_stop_cntrl_msg.header.msg_type := 2;
+        rfl_dc_stop_cntrl_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_dc_stop_cntrl_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_dc_stop_cntrl_msg.header, 9, raw_message;  
+        PackRawBytes rfl_dc_stop_cntrl_msg.status, raw_message, 29, \IntX:=USINT;
+    ENDPROC
+    
+    ! Pack message RFL_DC_MOVEMENT_FINISHED (length: 70 bytes)
+    PROC PackMSGRFLDCMovementFinished(MSG_RFL_DC_MOVEMENT_FINISHED rfl_dc_movement_finished_msg, VAR rawbytes raw_message)
+        VAR num message_length := 70 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_dc_movement_finished_msg.header.msg_type := 3;
+        rfl_dc_movement_finished_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_dc_movement_finished_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_dc_movement_finished_msg.header, 9, raw_message;  
+        PackRawBytes rfl_dc_movement_finished_msg.dc_error_code, raw_message, 29, \IntX:=USINT;
+        PackString rfl_dc_movement_finished_msg.dc_error_msg, 30, kStrBuffLen, raw_message;   
+    ENDPROC
+    
+    ! Pack message RFL_DC_MOVE_CMD (length: 185 bytes)
+    PROC PackMSGRFLDCMoveCmd(MSG_RFL_DC_MOVE_CMD rfl_dc_move_cmd_msg, VAR rawbytes raw_message)
+        VAR num message_length := 185 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_dc_move_cmd_msg.header.msg_type := 4;
+        rfl_dc_move_cmd_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_dc_move_cmd_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_dc_move_cmd_msg.header, 9, raw_message;
+        PackPose rfl_dc_move_cmd_msg.end_effector_1, 29, raw_message;
+        PackPose rfl_dc_move_cmd_msg.end_effector_2, 57, raw_message;
+        PackString rfl_dc_move_cmd_msg.tool, 85, kStrBuffLen, raw_message;        
+        PackString rfl_dc_move_cmd_msg.wobj, 86 + kStrBuffLen, kStrBuffLen, raw_message;
+        PackRawBytes rfl_dc_move_cmd_msg.v_lin, raw_message, 87 + 2 * kStrBuffLen, \Float4;
+        PackRawBytes rfl_dc_move_cmd_msg.v_ang, raw_message, 91 + 2 * kStrBuffLen, \Float4;
+        PackRawBytes rfl_dc_move_cmd_msg.acc_time, raw_message, 95 + 2 * kStrBuffLen, \Float4;
+        PackRawBytes rfl_dc_move_cmd_msg.path_type, raw_message, 99 + 2 * kStrBuffLen, \IntX:=USINT;
+        PackRawBytes rfl_dc_move_cmd_msg.end_point_type, raw_message, 100 + 2 * kStrBuffLen, \IntX:=USINT;
+        PackRawBytes rfl_dc_move_cmd_msg.recover_path, raw_message, 101 + 2 * kStrBuffLen, \IntX:=USINT;
+        PackRawBytes rfl_dc_move_cmd_msg.hold_pose_time, raw_message, 102 + 2 * kStrBuffLen, \Float4;
+    ENDPROC
+    
+    ! Pack message RFL_DC_CNTRL_AGGR (length: 29 bytes)
+    PROC PackMSGRFLDCCntrlAggr(MSG_RFL_DC_CNTRL_AGGR rfl_dc_cntrl_aggr_msg, VAR rawbytes raw_message)
+        VAR num message_length := 29 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_dc_cntrl_aggr_msg.header.msg_type := 5;
+        rfl_dc_cntrl_aggr_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_dc_cntrl_aggr_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_dc_cntrl_aggr_msg.header, 9, raw_message;  
+        PackRawBytes rfl_dc_cntrl_aggr_msg.aggressivity, raw_message, 29, \IntX:=USINT;
+    ENDPROC
+    
+ENDMODULE

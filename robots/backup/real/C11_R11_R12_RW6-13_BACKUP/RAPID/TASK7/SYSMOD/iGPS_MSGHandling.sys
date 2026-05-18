@@ -1,0 +1,249 @@
+MODULE iGPS_MSGHandling(SYSMODULE, NOSTEPIN)
+    
+    ! **************************************************************************
+    ! Messages used for TCP/IP communication with RFL Static Correction Server:
+    ! 0: INVALID
+    ! 1: EMPTY
+    ! 2: RFL_CALIB_POSE
+    ! 3: RFL_CALIB_JOINTS
+    ! 4: RFL_CALIB_POSE_FEEDBACK
+    ! 5: RFL_CORR_CMD_REQUEST
+    ! 6: RFL_CORR_ROBOT_CMD
+    ! 7: RFL_CORR_ROBOT_FEEDBACK
+    ! 8: RFL_FRAME_REQUEST
+    ! 9: RFL_FRAME_FEEDBACK
+    ! 10: RFL_CHECK_POSE_REQUEST
+    ! 11: RFL_CHECK_POSE_FEEDBACK
+    ! 
+    ! Message Structure: 
+    ! length (8 bytes) + header (20 bytes) + content
+    ! **************************************************************************
+    
+    ! Message RFLCalibPose (Type = 2)
+    RECORD MSG_RFL_CALIB_POSE
+        MSG_HEADER header;
+        robtarget rob_target;
+    ENDRECORD
+    
+    ! Message RFLCalibJoints (Type = 3)
+    RECORD MSG_RFL_CALIB_JOINTS
+        MSG_HEADER header;
+        jointtarget rfl_calib_joints;
+    ENDRECORD
+    
+    ! Message RFLCalibPoseFeedback (Type = 4)
+    RECORD MSG_RFL_CALIB_POSE_FEEDBACK
+        MSG_HEADER header;
+        pose end_effector_world;
+        pose end_effector_base;
+    ENDRECORD
+    
+    ! Message RFLCorrCmdRequest (Type = 5)
+    RECORD MSG_RFL_CORR_CMD_REQUEST
+        MSG_HEADER header;
+        robtarget rob_target;
+        string tool; ! max kStrBuffLen characters
+        string workobj; ! max kStrBuffLen characters
+        num with_offset;
+        num with_corr_step;
+    ENDRECORD
+    
+    ! Message RFLCorrRobotCmd (Type = 6)
+    RECORD MSG_RFL_CORR_ROBOT_CMD
+        MSG_HEADER header;
+        num corr_error_code;
+        string corr_error_msg; ! max kStrBuffLen characters
+        robtarget rob_target;
+    ENDRECORD
+    
+    ! Message RFLCorrRobotFeedback (Type = 7)
+    RECORD MSG_RFL_CORR_ROBOT_FEEDBACK
+        MSG_HEADER header;
+        num robot_ok;
+        robtarget rob_target;
+    ENDRECORD
+    
+    ! Message RFLFrameRequest (Type = 8)
+    RECORD MSG_RFL_FRAME_REQUEST
+        MSG_HEADER header;
+        num frame_type; ! 0: tool, 1: wobj
+        num frame_index;
+    ENDRECORD
+    
+    ! Message RFLFrameFeedback (Type = 9)
+    RECORD MSG_RFL_FRAME_FEEDBACK
+        MSG_HEADER header;
+        num corr_error_code;
+        string corr_error_msg; ! max kStrBuffLen characters
+        num frame_exists;
+        num frame_type;  ! 0: tool, 1: wobj
+        num frame_index;
+        string frame_name;
+        pose frame_pose;
+    ENDRECORD
+    
+    ! Message RFLCheckPoseRequest (Type = 10)
+    RECORD MSG_RFL_CHECK_POSE_REQUEST
+        MSG_HEADER header;
+        pose des_pose;        
+        string tool; ! max kStrBuffLen characters
+        string workobj; ! max kStrBuffLen characters
+        num max_lin_error;
+        num max_rot_error;
+    ENDRECORD
+    
+    ! Message RFLCheckPoseFeedback (Type = 11)
+    RECORD MSG_RFL_CHECK_POSE_FEEDBACK
+        MSG_HEADER header;
+        num corr_error_code;
+        string corr_error_msg; ! max kStrBuffLen characters
+        pose meas_pose;  
+        num lin_error;
+        num rot_error;
+    ENDRECORD
+    
+    ! Buffer length used for strings
+    CONST num kStrBuffLen := 40;
+    
+    ! Unpack message RFL_CALIB_POSE (length: 68 bytes)
+    PROC UnpackMSGRFLCalibPose(VAR rawbytes raw_message, VAR MSG_RFL_CALIB_POSE rfl_calib_pose_msg)
+        rfl_calib_pose_msg.header := UnpackHeader(raw_message, 9);      
+        IF NOT CheckMessageType(2, rfl_calib_pose_msg.header.msg_type, "UnpackMSGRFLCalibPose") THEN
+            RETURN;
+        ENDIF
+        rfl_calib_pose_msg.rob_target := UnpackRobtarget(raw_message, 29);
+    ENDPROC
+    
+    ! Unpack message RFL_CALIB_JOINTS (length: 64 bytes)
+    PROC UnpackMSGRFLCalibJoints(VAR rawbytes raw_message, VAR MSG_RFL_CALIB_JOINTS rfl_calib_joints_msg)     
+        rfl_calib_joints_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(3, rfl_calib_joints_msg.header.msg_type, "UnpackMSGRFLCalibJoints") THEN
+            RETURN;
+        ENDIF
+        rfl_calib_joints_msg.rfl_calib_joints := UnpackJointtarget(raw_message, 29);
+    ENDPROC
+    
+    ! Unpack message RFL_CORR_ROBOT_CMD (length: 110 bytes)
+    PROC UnpackMSGRFLCorrRobotCmd(VAR rawbytes raw_message, VAR MSG_RFL_CORR_ROBOT_CMD rfl_corr_robot_cmd_msg)
+        rfl_corr_robot_cmd_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(6, rfl_corr_robot_cmd_msg.header.msg_type, "UnpackMSGRFLCorrRobotCmd") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_corr_robot_cmd_msg.corr_error_code, \IntX:=USINT;
+        rfl_corr_robot_cmd_msg.corr_error_msg := UnpackString(raw_message, 30);
+        rfl_corr_robot_cmd_msg.rob_target := UnpackRobtarget(raw_message, 31 + kStrBuffLen);
+    ENDPROC
+    
+    ! Unpack message RFL_FRAME_FEEDBACK (length: 110 bytes)
+    PROC UnpackMSGRFLFrameFeedback(VAR rawbytes raw_message, VAR MSG_RFL_FRAME_FEEDBACK rfl_frame_feedback_msg)
+        rfl_frame_feedback_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(9, rfl_frame_feedback_msg.header.msg_type, "UnpackRFLFrameFeedback") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_frame_feedback_msg.corr_error_code, \IntX:=USINT;
+        rfl_frame_feedback_msg.corr_error_msg := UnpackString(raw_message, 30);
+        UnpackRawBytes raw_message, 31 + kStrBuffLen, rfl_frame_feedback_msg.frame_exists, \IntX:=USINT;
+        UnpackRawBytes raw_message, 32 + kStrBuffLen, rfl_frame_feedback_msg.frame_type, \IntX:=USINT;
+        UnpackRawBytes raw_message, 33 + kStrBuffLen, rfl_frame_feedback_msg.frame_index, \IntX:=UDINT;
+        rfl_frame_feedback_msg.frame_name := UnpackString(raw_message, 37 + kStrBuffLen);
+        rfl_frame_feedback_msg.frame_pose := UnpackPose(raw_message, 38 + 2 * kStrBuffLen);
+    ENDPROC
+    
+    ! Unpack message RFL_CHECK_POSE_FEEDBACK (length: 106 bytes)
+    PROC UnpackMSGRFLCheckPoseFeedback(VAR rawbytes raw_message, VAR MSG_RFL_CHECK_POSE_FEEDBACK rfl_check_pose_feedback_msg)
+        rfl_check_pose_feedback_msg.header := UnpackHeader(raw_message, 9);
+        IF NOT CheckMessageType(11, rfl_check_pose_feedback_msg.header.msg_type, "UnpackMSGRFLCheckPoseFeedback") THEN
+            RETURN;
+        ENDIF
+        UnpackRawBytes raw_message, 29, rfl_check_pose_feedback_msg.corr_error_code, \IntX:=USINT;
+        rfl_check_pose_feedback_msg.corr_error_msg := UnpackString(raw_message, 30);
+        rfl_check_pose_feedback_msg.meas_pose := UnpackPose(raw_message, 31 + kStrBuffLen);
+        UnpackRawBytes raw_message, 59 + kStrBuffLen, rfl_check_pose_feedback_msg.lin_error, \Float4;
+        UnpackRawBytes raw_message, 63 + kStrBuffLen, rfl_check_pose_feedback_msg.rot_error, \Float4;
+        
+        rfl_check_pose_feedback_msg.lin_error := MToMM(rfl_check_pose_feedback_msg.lin_error);
+        rfl_check_pose_feedback_msg.rot_error := RadToDeg(rfl_check_pose_feedback_msg.rot_error);
+    ENDPROC
+    
+    ! Pack message RFL_CALIB_POSE_FEEDBACK (length: 84 bytes)
+    PROC PackMSGRFLCalibPoseFeedback(MSG_RFL_CALIB_POSE_FEEDBACK rfl_calib_pose_feedback_msg, num calib_target_num, VAR rawbytes raw_message)
+        VAR num message_length := 84 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_calib_pose_feedback_msg.header.msg_type := 4;
+        rfl_calib_pose_feedback_msg.header.msg_counter := calib_target_num;
+        CreateTimestamp rfl_calib_pose_feedback_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_calib_pose_feedback_msg.header, 9, raw_message;
+        PackPose rfl_calib_pose_feedback_msg.end_effector_world, 29, raw_message;
+        PackPose rfl_calib_pose_feedback_msg.end_effector_base, 57, raw_message;        
+    ENDPROC
+    
+    ! Pack message RFL_CORR_CMD_REQUEST (length: 152 bytes)
+    PROC PackMSGRFLCorrCmdRequest(MSG_RFL_CORR_CMD_REQUEST rfl_corr_cmd_request_msg, VAR rawbytes raw_message)
+        VAR num message_length := 152 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+        
+        rfl_corr_cmd_request_msg.header.msg_type := 5;
+        rfl_corr_cmd_request_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_corr_cmd_request_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_corr_cmd_request_msg.header, 9, raw_message;
+        PackRobtarget rfl_corr_cmd_request_msg.rob_target, 29, raw_message;
+        PackString rfl_corr_cmd_request_msg.tool, 69, kStrBuffLen, raw_message;        
+        PackString rfl_corr_cmd_request_msg.workobj, 70 + kStrBuffLen, kStrBuffLen, raw_message;  
+        PackRawBytes rfl_corr_cmd_request_msg.with_offset, raw_message, 71 + 2 * kStrBuffLen, \IntX:=USINT;
+        PackRawBytes rfl_corr_cmd_request_msg.with_corr_step, raw_message, 72 + 2 * kStrBuffLen, \IntX:=USINT;        
+    ENDPROC
+        
+    ! Pack message RFL_CORR_ROBOT_FEEDBACK (length: 69 bytes)
+    PROC PackMSGRFLCorrRobotFeedback(MSG_RFL_CORR_ROBOT_FEEDBACK rfl_corr_robot_feedback_msg, VAR rawbytes raw_message)
+        VAR num message_length := 69 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+        
+        rfl_corr_robot_feedback_msg.header.msg_type := 7;
+        rfl_corr_robot_feedback_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_corr_robot_feedback_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_corr_robot_feedback_msg.header, 9, raw_message;
+        PackRawBytes rfl_corr_robot_feedback_msg.robot_ok, raw_message, 29, \IntX:=USINT;
+        PackRobtarget rfl_corr_robot_feedback_msg.rob_target, 30, raw_message;
+    ENDPROC
+    
+    ! Pack message RFL_FRAME_REQUEST (length: 33)
+    PROC PackMSGRFLFrameRequest(MSG_RFL_FRAME_REQUEST rfl_frame_request_msg, VAR rawbytes raw_message)
+        VAR num message_length := 33 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+        
+        rfl_frame_request_msg.header.msg_type := 8;
+        rfl_frame_request_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_frame_request_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_frame_request_msg.header, 9, raw_message;
+        PackRawBytes rfl_frame_request_msg.frame_type, raw_message, 29, \IntX:=USINT;
+        PackRawBytes rfl_frame_request_msg.frame_index, raw_message, 30, \IntX:=UDINT;
+    ENDPROC
+    
+    ! Pack message RFL_CHECK_POSE_REQUEST (length: 146)
+    PROC PackMSGRFLCheckPoseRequest(MSG_RFL_CHECK_POSE_REQUEST rfl_check_pose_request_msg, VAR rawbytes raw_message)
+        VAR num message_length := 146 - 16; ! Message length does not include length of message length [8 bytes] and message type [8 bytes]
+        ClearRawBytes raw_message;
+
+        rfl_check_pose_request_msg.header.msg_type := 10;
+        rfl_check_pose_request_msg.header.msg_counter := 0;
+        CreateTimestamp rfl_check_pose_request_msg.header;
+        
+        PackRawBytes message_length, raw_message, 1, \IntX:=ULINT;
+        PackHeader rfl_check_pose_request_msg.header, 9, raw_message;
+        PackPose rfl_check_pose_request_msg.des_pose, 29, raw_message;
+        PackString rfl_check_pose_request_msg.tool, 57, kStrBuffLen, raw_message;        
+        PackString rfl_check_pose_request_msg.workobj, 58 + kStrBuffLen, kStrBuffLen, raw_message;
+        PackRawBytes MMToM(rfl_check_pose_request_msg.max_lin_error), raw_message, 59 + 2 * kStrBuffLen, \Float4;
+        PackRawBytes DegToRad(rfl_check_pose_request_msg.max_rot_error), raw_message, 63 + 2 * kStrBuffLen, \Float4;
+    ENDPROC
+    
+ENDMODULE

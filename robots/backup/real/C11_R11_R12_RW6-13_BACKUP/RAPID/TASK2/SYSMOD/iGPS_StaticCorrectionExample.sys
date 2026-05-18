@@ -1,0 +1,54 @@
+MODULE iGPS_StaticCorrectionExample(SYSMODULE)
+    ! The documentation can be found in the wiki on https://bitbucket.org/ethrfl/adrl-rfl-static-correction/
+    
+    ! RFL Static Correction Example
+    PROC StaticCorrectionExample(string robot_name)
+        VAR robtarget meas_target;
+        CONST robtarget rob_target_1 := [[22500, 9000, 2200], [0, 1, 0, 0], [-1, 2, -2, 0], [18500, -7000, -4500, 0, 0, 0]];
+        CONST robtarget rob_target_2 := [[22500, 9000, 2000], [0, 1, 0, 0], [-1, 2, -2, 0], [18500, -7000, -4500, 0, 0, 0]];
+        
+        TPErase;
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+        TPWrite "***                                ***";
+        TPWrite "***     RFL Static Correction      ***";
+        TPWrite "*** - Static Correction Example -  ***";
+        TPWrite "***                                ***";
+        TPWrite "**************************************";
+        TPWrite "**************************************";
+               
+        ! Connect to static correction server 
+        iGPSConnect robot_name;
+        
+        TPWrite "**************************************";     
+
+        ! iGPSMoveJAndCorrect example
+        TPWrite "Processing iGPSMoveJAndCorrect";
+        iGPSMoveJAndCorrect rob_target_1, v200, "tool0", "wobj0", FALSE;
+        
+        WaitTime 2;
+        
+        ! iGPSCheckRobTarget example
+        TPWrite "Processing iGPSCheckRobTarget";
+        iGPSCheckRobTarget rob_target_1, "tool0", "wobj0", 0.2, 0.05;
+
+        WaitTime 2;
+
+        ! iGPSMoveJ example
+        TPWrite "Processing iGPSMoveJ";
+        iGPSMoveJ rob_target_2, v200, "tool0", "wobj0", TRUE;
+        
+        WaitTime 2;
+        
+        ! iGPSGetRobTarget example
+        TPWrite "Processing iGPSGetRobTarget";
+        iGPSGetRobTarget meas_target, "tool0", "wobj0";
+        PrintRobTarget meas_target, "Measured Rob Target";
+        
+        TPWrite "**************************************";
+        
+        ! Disconnect from static correction server
+        iGPSDisconnect;
+    ENDPROC
+    
+ENDMODULE

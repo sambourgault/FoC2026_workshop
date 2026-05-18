@@ -1,0 +1,114 @@
+MODULE ABB_DataTask_12(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL_ABB
+    !
+    ! FUNCTION    :  Includ all Task Data's for Project
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2021.03.30
+    !
+    ! Copyright   :  ETH Zurich (CH) 2021
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Declaration :     bool
+    !************************************************
+    !
+    TASK PERS bool bROB_Close_CheckPos:=TRUE;
+    TASK PERS bool b_ABB_RunRef:=TRUE;
+
+    !************************************************
+    ! Declaration :     num
+    !************************************************
+    !
+    TASK PERS num n_ABB_Answer:=2;
+    !
+    TASK PERS num n_ABB_UiListItem:=1;
+    !
+    CONST num n_ABB_CalibPosExtax_X:=17400;
+    CONST num n_ABB_CalibPosExtax_Y:=-8600;
+    CONST num n_ABB_CalibPosExtax_Z:=-4515;
+    !
+    CONST num n_ABB_OffsRefPos_Z:=100;
+    !
+    CONST num n_ABB_BrakeCheckPosZ:=-4915;
+    CONST num n_ABB_MaxPreBrakeCheckPosZ:=-4900;
+    TASK PERS num n_ABB_BrakeCheckAktPosZ:=-4058.7;
+
+    !************************************************
+    ! Declaration :     string
+    !************************************************
+    !
+    ! Button Array max 5 Items
+    CONST string st_ABB_BtnExit{1}:=["Exit"];
+    CONST string st_ABB_BtnOkExit{2}:=["Ok","Exit"];
+    CONST string st_ABB_BtnToPos{4}:=["X","Y","Z","Exit"];
+    CONST string st_ABB_BtnRefPos{2}:=["Move","Exit"];
+
+    !************************************************
+    ! Declaration :     listitem
+    !************************************************
+    !
+    CONST listitem li_ABB_RefPos{1}:=[["","Manual toolchanger with RFL Tip"]];
+
+    !************************************************
+    ! Declaration :     tooldata
+    !************************************************
+    !
+    TASK PERS tooldata tCurrent:=[TRUE,[[0,0,0],[1,0,0,0]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];
+    TASK PERS tooldata t_ABB_RefTool:=[TRUE,[[0,0,250],[1,0,0,0]],[1.5,[0,0,0.001],[1,0,0,0],0,0,0]];
+    !
+    ! Manual schunk tool chancher with RFL Tip
+    TASK PERS tooldata t_ABB_RFLTip:=[TRUE,[[0,0,250],[1,0,0,0]],[1.5,[0,0,0.001],[1,0,0,0],0,0,0]];
+
+    !************************************************
+    ! Declaration :     jointtarget
+    !************************************************
+    !
+    !--Actual Robot position
+    TASK PERS jointtarget jRobPos:=[[-0.000160006,-64.9999,65.0001,-2.15874E-05,34.9998,-0.00027736],[25268.6,-6386.55,-4915,0,0,0]];
+    !
+    !--Parkopositon, jedoch mit aktuellem Wert der gantry-X-Achse
+    TASK PERS jointtarget jpParkPos12_excl_X:=[[0,-73,73,0,0,0],[25268.6,-12230,-4915,0,0,0]];
+    !
+    !--Parkposition des Roboters incl. der 3 gantry Achsen (für "CraneFunction" des Robotersystems ) 
+    PERS jointtarget jpParkPos12:=[[0,-73,73,0,0,0],[20558.1,-12230,-4915,0,0,0]];
+    !
+    TASK PERS jointtarget jposActual:=[[-22.3989,11.3553,-13.1289,179.974,88.2484,25.1837],[13286.2,-8347.11,-4266.18,0,0,0]];
+    TASK PERS jointtarget jposCalibration:=[[0,0,0,0,0,0],[17400,-8600,-4515,0,0,0]];
+    CONST jointtarget jpos20:=[[1.3385,-61.5804,61.1014,-0.00249351,0.000695529,0.00573142],[14857.8,-12173,-4514.99,0,0,0]];
+    !
+    TASK PERS jointtarget pCheckBrakePos12:=[[0,-73,73,0,0,0],[20688.2,0,-4610,0,0,0]];
+    TASK PERS jointtarget jpStorePosBeforBrakeCheck:=[[-22.3987,11.3552,-13.1289,179.974,88.2484,25.1837],[13101.6,-8347.11,-4058.7,0,0,0]];
+    TASK PERS jointtarget jpTemp:=[[-22.3987,11.3552,-13.1289,179.974,88.2484,25.1837],[13101.6,-8347.11,-4915,0,0,0]];
+
+    !************************************************
+    ! Declaration :     robtarget
+    !************************************************
+    !
+    CONST robtarget p_ABB_RefPos:=[[20063.80,6884.41,7.12],[0.0560697,0.935186,-0.304252,0.172379],[0,-1,0,3],[18164.4,-8238.02,-1428.89,0,0,0]];
+
+    !************************************************
+    ! Declaration :     speeddata
+    !************************************************
+    !
+    !--Geschwindigkeit um in Parkposition zu fahren
+    CONST speeddata vParkPos:=[250,500,300,250];
+    !
+    CONST speeddata v_ABB_RefPos_Max:=[250,500,300,0];
+    CONST speeddata v_ABB_RefPos_Min:=[20,500,50,00];
+    !
+    CONST speeddata vBrakeCheck:=[250,500,300,250];
+
+ENDMODULE

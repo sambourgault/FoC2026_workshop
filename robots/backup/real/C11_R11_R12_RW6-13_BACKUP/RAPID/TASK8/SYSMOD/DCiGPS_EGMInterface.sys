@@ -1,0 +1,123 @@
+MODULE DCiGPS_EGMInterface(SYSMODULE, NOSTEPIN)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+    
+    LOCAL VAR egmident egm_id;
+    LOCAL VAR egmstate egm_state;
+    LOCAL VAR bool egm_running := FALSE;
+    LOCAL VAR bool continue := TRUE;
+    LOCAL VAR num num_retries := 0;
+    
+    LOCAL PERS tooldata egm_tool := [TRUE, [[0,0,0], [1,0,0,0]], [0.001, [0,0,0.001], [1,0,0,0], 0, 0, 0]];
+
+    ! Limits for cartesian and rotation convergence
+    LOCAL CONST egm_minmax egm_conv_lin:=[-0.1,0.1];
+    LOCAL CONST egm_minmax egm_conv_rot:=[-0.01,0.01];
+    
+    ! Correction frame offset: none
+    LOCAL VAR pose zero_offset:=[[0,0,0],[1,0,0,0]];
+    
+    PROC RFLDCStartEGM(string egm_udp_device, string running_flag_name, \loaddata tool_load)
+        DCMoveToEGMFinePoint;
+        
+        WaitTime 1;    
+        
+        WHILE continue DO
+            DCActivateAndRunEGM egm_udp_device, running_flag_name, \tool_load?tool_load;
+        ENDWHILE
+        
+        continue := TRUE;
+    ERROR
+        GetRunningFlag running_flag_name;
+        
+        IF egm_running THEN
+            SetRunningFlag running_flag_name, FALSE;
+            ! Automatically retry several times before warning is printed.
+            IF num_retries <= 5 THEN
+                num_retries := num_retries + 1;
+                WaitTime 1;
+                TRYNEXT;
+            ENDIF
+            num_retries := 0;
+            IF RetryAfterError(ERR_UDPUC_COMM, "DCActivateAndRunEGM()", "Unable to hand over control to RFL DC Controller!") THEN
+                TRYNEXT;
+            ELSE
+                egm_tool := tool0;  
+                EXIT;
+            ENDIF   
+        ELSE
+            ! Ignore error, normal exit of EGMRunPose. This procedure will always end with an error, since it is not possible
+            ! to terminate EGMRunPose from the remote udp device.
+            egm_tool := tool0;  
+            num_retries := 0;
+            continue := FALSE;
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC DCMoveToEGMFinePoint()
+        VAR robtarget curr_target;
+        
+        curr_target := CRobT(\Tool := tool0, \WObj := wobj0);
+        
+        MoveJ curr_target, v150, fine, tool0;        
+    ENDPROC
+    
+    LOCAL PROC DCActivateAndRunEGM(string egm_udp_device, string running_flag_name, \loaddata tool_load)
+        ! Reset and get EGM ID
+        EGMReset egm_id;
+        EGMGetId egm_id;
+
+        ! Get EGM state
+        egm_state := EGMGetState(egm_id);
+
+        ! Set up EGM
+        EGMSetupUC ROB_ID, egm_id, "default_raw", egm_udp_device, \pose;
+        
+        ! Set tool load
+        DCSetToolLoad \tool_load?tool_load;
+        
+        ! Activate pose mode
+        EGMActPose egm_id, \Tool:=egm_tool, \Wobj:=wobj0, zero_offset, EGM_FRAME_WORLD, zero_offset, EGM_FRAME_WORLD,
+        \x:=egm_conv_lin, \y:=egm_conv_lin, \z:=egm_conv_lin, \rx:=egm_conv_rot, \ry:=egm_conv_rot, \rz:=egm_conv_rot,
+        \LpFilter:=0, \SampleRate:=4, \MaxPosDeviation:=10000, \MaxSpeedDeviation:=10000;
+        
+        SetRunningFlag running_flag_name, TRUE;
+        
+        ! Run pose mode (Note: CondTime is set to a huge number, since we want to continuously control the robot, 
+        ! and PosCorrGain is set to zero, so we can send velocities only.)
+        EGMRunPose egm_id, EGM_STOP_HOLD, \x, \y, \z, \rx, \ry, \rz, \CondTime:=8E6, \RampInTime:=0, \PosCorrGain:=0;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC DCSetToolLoad(\loaddata tool_load)           
+        egm_tool := tool0;  
+        
+        IF Present(tool_load) THEN
+            egm_tool.tload := tool_load;
+        ENDIF
+    ENDPROC
+    
+    LOCAL FUNC bool RetryAfterError(errnum erro_num, string function_name, string error_msg)
+        VAR btnres answer;
+        IF ERRNO = erro_num THEN
+            UIMsgBox \Header:="DCiGPS Error", function_name + ": " + error_msg, \Buttons:=btnRetryCancel, \Icon:=iconWarning, \Result:=answer;
+            IF (answer = resRetry) THEN
+                RETURN TRUE;
+            ELSEIF (answer = resCancel) THEN
+                EXIT;
+            ENDIF
+        ENDIF         
+        RETURN FALSE;
+    ENDFUNC
+    
+    LOCAL PROC GetRunningFlag(string running_flag_name)
+        GetDataVal running_flag_name, egm_running;
+    ENDPROC
+    
+    LOCAL PROC SetRunningFlag(string running_flag_name, bool running)
+        egm_running := running;
+        SetDataVal running_flag_name, egm_running;
+    ENDPROC
+    
+ENDMODULE

@@ -1,0 +1,809 @@
+MODULE iGPS_StaticCorrection(SYSMODULE, NOSTEPIN)
+    ! The documentation can be found in the wiki on https://bitbucket.org/ethrfl/adrl-rfl-static-correction/
+    
+    LOCAL VAR num sc_robot_index;
+    LOCAL VAR socketdev static_correction_socket;
+    LOCAL VAR rawbytes sc_raw_message_recv;
+    LOCAL VAR rawbytes sc_raw_message_sent;
+    LOCAL VAR num sc_msg_type_rcv;
+    LOCAL VAR MSG_RFL_CORR_CMD_REQUEST rfl_corr_cmd_request_msg;
+    LOCAL VAR MSG_RFL_CORR_ROBOT_CMD rfl_corr_robot_cmd_msg;
+    LOCAL VAR MSG_RFL_CORR_ROBOT_FEEDBACK rfl_corr_robot_feedback_msg;
+    LOCAL VAR MSG_RFL_CHECK_POSE_REQUEST rfl_check_pose_request_msg;
+    LOCAL VAR MSG_RFL_CHECK_POSE_FEEDBACK rfl_check_pose_feedback_msg;
+    LOCAL PERS tooldata sc_tool := [TRUE, [[0,0,0], [1,0,0,0]], [0.001, [0,0,0.001], [1,0,0,0], 0, 0, 0]];
+    LOCAL PERS wobjdata sc_wobj := [FALSE, TRUE, "", [[-2614.77,-2058.44,29.42], [1,-2.8E-05,4.7E-05,-3.4E-05]], [[0,0,0], [1,0,0,0]]];
+    LOCAL VAR zonedata sc_zone := fine;
+    LOCAL VAR errnum ERR_IGPS := -1;
+    LOCAL VAR bool first_try := TRUE;
+    LOCAL VAR bool movement_step_successful := FALSE;
+    
+    ! Connect to static correction server
+    PROC iGPSConnect(string robot_name, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg := "Success";
+        BookErrNo ERR_IGPS;
+        
+        IF kAlwaysUseOfflineData THEN
+            TPWrite "WARNING: Always using iGPS Offline Data.";
+        ENDIF
+        
+        IF kIngoreVirtMode THEN
+            TPWrite "WARNING: Virtual controller will also connect to SC server.";
+        ENDIF
+        
+        IF NOT kEnableCorrectionStep THEN
+            TPWrite "WARNING: Correction step disabled in configuration.";
+        ENDIF
+        
+        IF kAlwaysCheckRobTarget THEN
+            TPWrite "WARNING: Automatically checking robtarget after correction step.";
+        ENDIF 
+        
+        IF NOT RunOffline() THEN
+            ConnectAndUpdateOfflineData robot_name, igps_error_msg;
+        ELSE
+            TPWrite "WARNING: Running in virtual controller mode - Using iGPS Offline Data.";
+        ENDIF
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSConnect", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC OfflineDataUpdater(string robot_name, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        BookErrNo ERR_IGPS;
+        ConnectAndUpdateOfflineData robot_name, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+        
+        DisconnectFromServer;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            DisconnectFromServer;
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("OfflineDataUpdater", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ConnectAndUpdateOfflineData(string robot_name, VAR string corr_error_msg)
+        VAR bool successful;
+        ConnectToServer robot_name, successful;
+        
+        TPWrite "Updating iGPS Offline Data...";
+        GetAndCreateOfflineData robot_name, static_correction_socket, corr_error_msg;
+        
+        IF corr_error_msg = "Success" THEN
+            TPWrite " iGPS Offline Data successfully updated.";
+        ELSE
+            TPWrite " WARNING: Updating iGPS Offline Data failed!";
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ConnectToServer(string robot_name, VAR bool successful)        
+        IF FindRobotIndex(robot_name, sc_robot_index) = FALSE THEN
+            TPWrite "ERROR: Robot name not available!";
+            successful := FALSE;
+            RETURN;
+        ENDIF
+            
+        SetupSCClient;
+        
+        successful := TRUE;        
+    ENDPROC
+    
+    PROC SetupSCClient()
+        ! Setting up a TCP/IP client to communicate with static correction server        
+        SetupCorrClient static_correction_socket, kiGPSServerIP, kRobotDefs{sc_robot_index}.sc_server_port;
+    ENDPROC
+    
+    PROC SetupCorrClient(VAR socketdev socket_dev, string ip, num port)
+        TPWrite "Configured server: " + ip + ":" + ValToStr(port);
+        TPWrite "Connecting to server"  + "...";
+        SetupTCPIPClient socket_dev, ip, port;
+        TPWrite " Connection established.";
+    ENDPROC
+    
+    PROC iGPSDisconnect()
+        IF NOT RunOffline() THEN
+            DisconnectFromServer;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC DisconnectFromServer()
+        CloseTCPIPClient static_correction_socket;
+        TPWrite "Static correction server disconnected.";
+    ENDPROC
+
+    PROC iGPSMoveJ(robtarget rob_target, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovement "J", rob_target, speed, \zone?zone, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveJ", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSMoveJAndCorrect(robtarget rob_target, speeddata speed, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovementAndCorrect "J", rob_target, speed, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveJAndCorrect", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSMoveL(robtarget rob_target, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovement "L", rob_target, speed, \zone?zone, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveL", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSMoveLAndCorrect(robtarget rob_target, speeddata speed, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovementAndCorrect "L", rob_target, speed, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveLAndCorrect", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSMoveC(robtarget rt1, robtarget rt2, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovement "C", rt1, \rt2:=rt2, speed, \zone?zone, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveC", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSMoveCAndCorrect(robtarget rt1, robtarget rt2, speeddata speed, string tool, \loaddata tool_load, string workobj, bool with_offset, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        iGPSMovementAndCorrect "C", rt1, \rt2:=rt2, speed, tool, \tool_load?tool_load, workobj, with_offset, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSMoveCAndCorrect", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSCheckRobTarget(robtarget des_target, string tool, \loaddata tool_load, string workobj, num max_lin_error, num max_rot_error, \VAR num lin_error, \VAR num rot_error, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        
+        IF RunOffline() THEN
+            ProcessiGPSCheckRobTargetOffline des_target, tool, \tool_load?tool_load, workobj, \lin_error?lin_error, \rot_error?rot_error, \error_ui?error_ui, igps_error_msg;
+        ELSE
+            ProcessiGPSCheckRobTargetOnline des_target, tool, workobj, max_lin_error, max_rot_error, \lin_error?lin_error, \rot_error?rot_error, \error_ui?error_ui, igps_error_msg;
+        ENDIF
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSCheckRobTarget", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC iGPSGetRobTarget(VAR robtarget meas_target, string tool, \loaddata tool_load, string workobj, \bool error_ui, \VAR string corr_error_msg)
+        VAR string igps_error_msg;
+        
+        IF RunOffline() THEN
+            ProcessiGPSGetRobTargetOffline meas_target, tool, \tool_load?tool_load, workobj, \error_ui?error_ui, igps_error_msg;
+        ELSE
+            ProcessiGPSGetRobTargetOnline meas_target, tool, workobj, \error_ui?error_ui, igps_error_msg;
+        ENDIF
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?corr_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?corr_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("iGPSGetPose", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC iGPSMovement(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, bool with_offset, VAR string corr_error_msg)
+        corr_error_msg := "Success";
+        
+        IF RunOffline() THEN
+            iGPSOfflineMovement move_type, rt1, \rt2?rt2, speed, \zone?zone, tool, \tool_load?tool_load, workobj, corr_error_msg;     
+        ELSE
+            iGPSOnlineMovement move_type, rt1, \rt2?rt2, speed, \zone?zone, tool, \tool_load?tool_load, workobj, with_offset, corr_error_msg; 
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC iGPSOnlineMovement(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, bool with_offset, VAR string corr_error_msg)
+        VAR bool use_offset := FALSE; 
+        VAR robtarget rt1_cmd;
+        VAR robtarget rt2_cmd;
+        
+        IF kEnableCorrectionStep THEN
+            use_offset := with_offset;
+        ENDIF
+        
+        ! Request correction robot command from static correction server
+        RequestCorrRobCmd rt1, tool, workobj, use_offset, FALSE, rt1_cmd, corr_error_msg; ! Note with_corr_step set to FALSE
+        IF Present(rt2) THEN
+            RequestCorrRobCmd rt2, tool, workobj, use_offset, FALSE, rt2_cmd, corr_error_msg; ! Note with_corr_step set to FALSE
+        ENDIF
+        
+        ! Execute correction robot command
+        ExecCorrRobotCmd move_type, rt1_cmd, \rt2:=rt2_cmd, speed, \zone?zone, \tool_load?tool_load, corr_error_msg;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC iGPSMovementAndCorrect(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, string tool, \loaddata tool_load, string workobj, bool with_offset, VAR string corr_error_msg)    
+        VAR bool robot_ok := TRUE;
+        VAR robtarget rt1_cmd;
+        VAR robtarget rt2_cmd;
+        VAR robtarget des_target;
+        VAR confdata rob_conf;
+        
+        ! If correction step is disabled or we are running in offline mode, do normal movement without correction step
+        IF NOT kEnableCorrectionStep OR RunOffline() THEN
+            iGPSMovement move_type, rt1, \rt2?rt2, speed, tool, \tool_load?tool_load, workobj, with_offset, corr_error_msg;
+            RETURN;
+        ENDIF
+        
+        ! Else we do a movement with a following correction step
+        
+        ! IF a retry is executed after the movement step was successful, set move_type to "J", rt1 to rt2 (if present) and make sure ELSE is executed, 
+        ! to just repeat the correction step. Otherwise MoveC would result in a faulty movement.
+        IF ((NOT first_try) AND (movement_step_successful)) THEN 
+            move_type := "J";
+            IF Present(rt2) THEN rt1 := rt2; ENDIF
+            
+            ! IF a retry is executed after the automatic checkrob target failed do the same but always WITH offset, since the correction step worked before.
+            IF (corr_error_msg = "CheckPoseLimitsExceeded") THEN  with_offset := TRUE; ENDIF
+        ENDIF
+        
+        IF first_try THEN movement_step_successful := FALSE; ENDIF
+        first_try := FALSE;
+        corr_error_msg := "Success";
+        
+        ! Request correction robot command from static correction server
+        IF (Present(rt2) AND (move_type <> "J")) THEN
+            RequestCorrRobCmd rt1, tool, workobj, with_offset, FALSE, rt1_cmd, corr_error_msg; ! Note with_corr_step set to FALSE
+            RequestCorrRobCmd rt2, tool, workobj, with_offset, TRUE, rt2_cmd, corr_error_msg; ! Note with_corr_step set to TRUE
+            rob_conf := rt2_cmd.robconf;
+        ELSE
+            RequestCorrRobCmd rt1, tool, workobj, with_offset, TRUE, rt1_cmd, corr_error_msg; ! Note with_corr_step set to TRUE
+            rob_conf := rt1_cmd.robconf;
+        ENDIF
+        
+        ! Execute correction robot command
+        ExecCorrRobotCmd move_type, rt1_cmd, \rt2:=rt2_cmd, speed, \tool_load?tool_load, corr_error_msg;
+        
+        IF NOT(corr_error_msg = "Success") THEN robot_ok := FALSE; ENDIF
+        
+        IF robot_ok THEN movement_step_successful := TRUE; ENDIF
+        
+        ! Send feedback and request correction robot command from static correction server
+        WaitTime 0.5;
+        RequestCorrRobCmdFromFB robot_ok, rob_conf, rt1_cmd, corr_error_msg;
+        
+        ! Execute correction robot command
+        ExecCorrRobotCmd "J", rt1_cmd, kSCSpeed, \tool_load?tool_load, corr_error_msg; ! Note: always MoveJ and with speed kSCSpeed
+        
+        ! Automatically check rob target
+        IF kAlwaysCheckRobTarget THEN
+            IF Present(rt2) THEN
+                des_target := rt2;
+            ELSE
+                des_target := rt1;
+            ENDIF
+            
+            WaitTime kAlwaysCheckDelay;
+            
+            iGPSCheckRobTarget des_target, tool, \tool_load?tool_load, workobj, kAlwaysCheckLinError, kAlwaysCheckRotError, \error_ui:=FALSE, \corr_error_msg:=corr_error_msg;
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC iGPSOfflineMovement(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, \zonedata zone, string tool, \loaddata tool_load, string workobj, VAR string corr_error_msg)
+        SetZone \zone?zone;
+        GetOfflineiGPSTool tool, sc_tool, corr_error_msg;
+        GetOfflineiGPSWobj workobj, sc_wobj, corr_error_msg;      
+        SetToolLoad \tool_load?tool_load;
+        
+        IF (corr_error_msg = "Success") THEN
+            MoveRobotToTarget move_type, rt1, \rt2?rt2, speed, sc_zone, sc_tool, sc_wobj, corr_error_msg;
+        ENDIF
+    
+        ! Make sure initial state stays the same (Persistent)
+        sc_tool := tool0;  
+        sc_wobj := wobj0;        
+    ENDPROC
+    
+    PROC GetOfflineiGPSTool(string tool_string, PERS tooldata tool_data, VAR string corr_error_msg)
+        VAR tooldata temp_tool;
+        
+        IF tool_string = "tool0" OR tool_string = "Tool0" THEN
+            tool_string := "igps_tool0";
+        ENDIF
+        
+        GetDataVal tool_string, temp_tool;
+        tool_data := temp_tool;
+    ERROR
+        IF ERRNO = ERR_SYM_ACCESS THEN
+            corr_error_msg := "ToolNotFound";
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    PROC GetOfflineiGPSWobj(string wobj_string, PERS wobjdata wobj_data, VAR string corr_error_msg)
+        VAR wobjdata temp_wobj;
+        
+        IF wobj_string = "workobj0" OR wobj_string = "Workobj0" OR wobj_string = "wobj0" OR  wobj_string = "Wobj0" OR wobj_string = "WObj0" THEN
+            wobj_string := "igps_wobj0";
+        ENDIF
+
+        GetDataVal wobj_string, temp_wobj;
+        wobj_data := temp_wobj;
+    ERROR
+        IF ERRNO = ERR_SYM_ACCESS THEN
+            corr_error_msg := "WorkObjNotFound";
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC SetZone(\zonedata zone)
+        IF Present(zone) THEN
+            sc_zone := zone;
+        ELSE
+            sc_zone := fine;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC SetToolLoad(\loaddata tool_load)
+        IF Present(tool_load) THEN
+            sc_tool.tload := tool_load;
+        ENDIF
+    ENDPROC
+    
+    FUNC bool FindRobotIndex(string robot_name, VAR num rob_index)        
+        FOR i FROM 1 TO Dim(kRobotDefs, 1) DO 
+            IF robot_name = kRobotDefs{i}.robot_name THEN
+                rob_index := i;
+                RETURN TRUE;
+            ENDIF
+        ENDFOR
+        
+        RETURN FALSE;
+    ENDFUNC
+    
+    LOCAL PROC CreateCmdRequest(robtarget rob_target, string tool, string workobj, bool with_offset, bool with_corr_step)
+        rfl_corr_cmd_request_msg.rob_target := rob_target;
+        rfl_corr_cmd_request_msg.tool := tool;
+        rfl_corr_cmd_request_msg.workobj := workobj;
+        rfl_corr_cmd_request_msg.with_offset := BoolToNum(with_offset);
+        rfl_corr_cmd_request_msg.with_corr_step := BoolToNum(with_corr_step);
+    ENDPROC
+    
+    LOCAL PROC CreateRobotFeedback(bool robot_ok)
+        rfl_corr_robot_feedback_msg.robot_ok := BoolToNum(robot_ok);
+        rfl_corr_robot_feedback_msg.rob_target := CRobT(\Tool := tool0, \WObj := wobj0);
+    ENDPROC
+    
+    LOCAL PROC CreateCheckPoseRequest(robtarget rob_target, string tool, string workobj, num max_lin_error, num max_rot_error)
+        rfl_check_pose_request_msg.des_pose.trans := rob_target.trans;
+        rfl_check_pose_request_msg.des_pose.rot := rob_target.rot;
+        rfl_check_pose_request_msg.tool := tool;
+        rfl_check_pose_request_msg.workobj := workobj;
+        rfl_check_pose_request_msg.max_lin_error := max_lin_error;
+        rfl_check_pose_request_msg.max_rot_error := max_rot_error;        
+    ENDPROC
+        
+    LOCAL PROC RequestCorrRobCmdFromFB(bool robot_ok, confdata rob_conf, VAR robtarget rob_target_cmd, VAR string corr_error_msg)
+        ! Create and send correction feedback to static correction server
+        CreateRobotFeedback robot_ok;
+        PackMSGRFLCorrRobotFeedback rfl_corr_robot_feedback_msg, sc_raw_message_sent;
+        SendMessage static_correction_socket, sc_raw_message_sent;
+        
+        ! Wait for correction robot command message from static correction server
+        WaitForCorrCmd rob_conf, rob_target_cmd, corr_error_msg;
+    ERROR         
+        RAISE;
+    ENDPROC
+        
+    LOCAL PROC RequestCorrRobCmd(robtarget rob_target, string tool, string workobj, bool with_offset, bool with_corr_step, VAR robtarget rob_target_cmd, VAR string corr_error_msg)
+        ! Create and send static correction cmd request to static correction server
+        CreateCmdRequest rob_target, tool, workobj, with_offset, with_corr_step;
+        PackMSGRFLCorrCmdRequest rfl_corr_cmd_request_msg, sc_raw_message_sent;
+        SendMessage static_correction_socket, sc_raw_message_sent;
+        
+        ! Wait for correction robot command message from static correction server
+        WaitForCorrCmd rob_target.robconf, rob_target_cmd, corr_error_msg;
+    ERROR         
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC WaitForCorrCmd(confdata rob_conf, VAR robtarget rob_target_cmd, VAR string corr_error_msg)
+        ! Wait for correction robot command message from static correction server
+        ReceiveMessage static_correction_socket, sc_msg_type_rcv, sc_raw_message_recv;
+        
+        ! Unpack message 
+        IF (sc_msg_type_rcv = 6) THEN
+            UnpackMSGRFLCorrRobotCmd sc_raw_message_recv, rfl_corr_robot_cmd_msg;
+            rob_target_cmd := rfl_corr_robot_cmd_msg.rob_target;
+            rob_target_cmd.robconf := rob_conf;
+            corr_error_msg := rfl_corr_robot_cmd_msg.corr_error_msg;
+        ELSE
+            corr_error_msg := "ReceivedWrongMessageType";
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ExecCorrRobotCmd(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, \zonedata zone, \loaddata tool_load, VAR string corr_error_msg)  
+        SetZone \zone?zone;
+        sc_tool := tool0;
+        SetToolLoad \tool_load?tool_load;
+        
+        ! Move robot to target
+        MoveRobotToTarget move_type, rt1, \rt2?rt2, speed, sc_zone, sc_tool, wobj0, corr_error_msg;
+        
+        ! Make sure initial state stays the same (Persistent)
+        sc_tool := tool0;
+    ENDPROC
+    
+    LOCAL PROC ProcessiGPSCheckRobTargetOffline(robtarget des_target, string tool, \loaddata tool_load, string workobj, \VAR num lin_error, \VAR num rot_error, \bool error_ui, VAR string corr_error_msg)
+        VAR robtarget meas_target;
+
+        ProcessiGPSGetRobTargetOffline meas_target, tool, \tool_load?tool_load, workobj, \error_ui?error_ui, corr_error_msg;
+        
+        if Present(lin_error) lin_error := 0.0;
+        if Present(rot_error) rot_error := 0.0;
+        
+        ! Compare measured target to desired target. Note: in offline mode we expect much lower errors and ignore the specified max lin and rot errors.
+        IF (MaxDiffExtAx(meas_target.extax, des_target.extax) > 0.01) THEN
+            TPWrite "WARNING: Check pose limits exceeded on external axes.";
+            corr_error_msg := "CheckPoseLimitsExceeded";
+        ENDIF
+        
+        IF (Distance(meas_target.trans, des_target.trans) > 0.01) THEN
+            TPWrite "WARNING: Check pose limits exceeded on linear position.";
+            corr_error_msg := "CheckPoseLimitsExceeded";
+        ENDIF
+        
+        IF (MaxDiffOrient(meas_target.rot, des_target.rot) > 0.00001) THEN
+            FlipQuat meas_target.rot;
+                        
+            IF (MaxDiffOrient(meas_target.rot, des_target.rot) > 0.00001) THEN
+                TPWrite "WARNING: Check pose limits exceeded on orientation.";
+                corr_error_msg := "CheckPoseLimitsExceeded";
+            ENDIF
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ProcessiGPSCheckRobTargetOnline(robtarget des_target, string tool, string workobj, num max_lin_error, num max_rot_error, \VAR num lin_error, \VAR num rot_error, \bool error_ui, VAR string corr_error_msg)
+        VAR robtarget meas_target;
+        
+        ProcessiGPSGetRobTargetOnline \des_target:=des_target, meas_target, tool, workobj, \max_lin_error:=max_lin_error, \max_rot_error:=max_rot_error, \error_ui?error_ui, corr_error_msg;
+        
+        if Present(lin_error) lin_error := rfl_check_pose_feedback_msg.lin_error;
+        if Present(rot_error) rot_error := rfl_check_pose_feedback_msg.rot_error;
+        
+        ! Compare measured extax to desired extax. Note: here we demand high accuracy.
+        IF (MaxDiffExtAx(meas_target.extax, des_target.extax) > 0.01) THEN
+            TPWrite "WARNING: Check pose limits exceeded on external axes.";
+            corr_error_msg := "CheckPoseLimitsExceeded";
+        ENDIF
+        
+        ! Check if errors are within limits
+        IF (rfl_check_pose_feedback_msg.lin_error > max_lin_error) THEN
+            TPWrite "WARNING: Check pose limits exceeded on linear position.";
+            TPWrite "Linear error: " + ValToStr(rfl_check_pose_feedback_msg.lin_error) + ", Limit: " + ValToStr(max_lin_error);
+            corr_error_msg := "CheckPoseLimitsExceeded";
+        ENDIF
+        
+        IF (rfl_check_pose_feedback_msg.rot_error > max_rot_error) THEN
+            TPWrite "WARNING: Check pose limits exceeded on orientation.";
+            TPWrite "Orient error: " + ValToStr(rfl_check_pose_feedback_msg.rot_error) + ", Limit: " + ValToStr(max_rot_error);
+            corr_error_msg := "CheckPoseLimitsExceeded";
+        ENDIF
+        
+        ErrorRaiser corr_error_msg;        
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ProcessiGPSGetRobTargetOffline(VAR robtarget meas_target, string tool, \loaddata tool_load, string workobj, \bool error_ui, VAR string corr_error_msg)
+        corr_error_msg := "Success";
+        
+        GetOfflineiGPSTool tool, sc_tool, corr_error_msg;
+        GetOfflineiGPSWobj workobj, sc_wobj, corr_error_msg;      
+        SetToolLoad \tool_load?tool_load;
+        
+        IF (corr_error_msg = "Success") THEN
+            meas_target := CRobT(\Tool:=sc_tool, \WObj:=sc_wobj);
+        ENDIF
+    
+        ! Make sure initial state stays the same (Persistent)
+        sc_tool := tool0;  
+        sc_wobj := wobj0;  
+        
+        ErrorRaiser corr_error_msg;
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ProcessiGPSGetRobTargetOnline(\robtarget des_target, VAR robtarget meas_target, string tool, string workobj, \num max_lin_error, \num max_rot_error, \bool error_ui, VAR string corr_error_msg)
+        ! Note: The static correction server does not check the errors and just returns the current pose if max lin and rot error are set to -1.0.
+        VAR robtarget des_target_l := [[0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0, 0, 0] ];
+        VAR num max_lin_error_l := -1.0;
+        VAR num max_rot_error_l := -1.0;            
+        corr_error_msg := "Success";
+        
+        IF present(des_target) des_target_l := des_target;
+        IF present(max_lin_error) max_lin_error_l := max_lin_error;
+        IF present(max_rot_error) max_rot_error_l := max_rot_error;
+        
+        ! Create and send check pose request to static correction server
+        CreateCheckPoseRequest des_target_l, tool, workobj, max_lin_error_l, max_rot_error_l;
+        PackMSGRFLCheckPoseRequest rfl_check_pose_request_msg, sc_raw_message_sent;
+        SendMessage static_correction_socket, sc_raw_message_sent;
+        
+        ! Wait for check pose feedback message from static correction server
+        ReceiveMessage static_correction_socket, sc_msg_type_rcv, sc_raw_message_recv;
+        
+        ! Unpack message 
+        IF (sc_msg_type_rcv = 11) THEN
+            UnpackMSGRFLCheckPoseFeedback sc_raw_message_recv, rfl_check_pose_feedback_msg;
+            corr_error_msg := rfl_check_pose_feedback_msg.corr_error_msg;
+        ELSE
+            corr_error_msg := "ReceivedWrongMessageType";
+        ENDIF
+        
+        IF NOT (corr_error_msg = "CheckPoseLimitsExceeded") THEN
+            ErrorRaiser corr_error_msg;
+        ENDIF        
+        
+        meas_target.trans := rfl_check_pose_feedback_msg.meas_pose.trans;
+        meas_target.rot := rfl_check_pose_feedback_msg.meas_pose.rot;
+        meas_target.extax := CExtT();       
+        meas_target.robconf := CConfT();
+    ERROR
+        IF SockErrorRaiser(corr_error_msg) THEN            
+            RAISE ERR_IGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC MoveRobotToTarget(string move_type, robtarget rt1, \robtarget rt2, speeddata speed, zonedata zone, PERS tooldata tool, PERS wobjdata wobj, VAR string corr_error_msg)   
+        VAR accdata acc_set;
+        
+        acc_set := C_MOTSET.acc; ! Store current acceleration settings
+        AccSet kSCAccSettings{1}, kSCAccSettings{2} \FinePointRamp:=kSCAccSettings{3}; ! Ensure smooth movements to prevent oscilations after robot stop
+        
+        ! Move robot to target
+        IF (move_type = "J") THEN
+            MoveJ rt1, speed, zone, tool, \WObj := wobj;
+        ELSEIF (move_type = "L") THEN
+            MoveL rt1, speed, zone, tool, \WObj := wobj;
+        ELSEIF (move_type = "C") THEN
+            MoveC rt1, rt2, speed, zone, tool, \WObj := wobj;
+        ELSE
+            corr_error_msg := "MovementTypeNotSupported";
+        ENDIF
+        
+        AccSet acc_set.acc, acc_set.ramp \FinePointRamp := acc_set.finepramp; ! Set acceleration settings as they were before
+    ENDPROC
+    
+    LOCAL FUNC num BoolToNum(bool boolean)
+        VAR num number;
+        
+        IF boolean THEN
+            number := 1;
+        ELSE
+            number := 0;
+        ENDIF
+        
+        RETURN number;
+    ENDFUNC
+    
+    LOCAL PROC ErrorRaiser(string corr_error_msg)
+        CorrMsgErrorRaiser ERR_IGPS, corr_error_msg;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL FUNC bool RetryAfterError(string function_name, string igps_error_msg)       
+        RETURN RetryAfterCorrError(ERR_IGPS, "iGPS Error", function_name, igps_error_msg);
+    ENDFUNC
+    
+    LOCAL FUNC bool SockErrorRaiser(VAR string corr_error_msg)
+        RETURN CorrSockErrorRaiser("iGPS Error", "SetupSCClient", corr_error_msg);
+    ENDFUNC
+    
+    LOCAL FUNC bool RunOffline()
+        RETURN FALSE;
+    ENDFUNC
+    
+    PROC CorrMsgErrorRaiser(errnum err_num, string corr_error_msg)
+        IF NOT(corr_error_msg = "Success") THEN
+            RAISE err_num;
+        ENDIF
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    PROC SetOptCorrErrorMsg(string error_msg, \VAR string opt_error_msg)
+        IF Present(opt_error_msg) THEN
+            opt_error_msg := error_msg;
+        ENDIF
+    ENDPROC
+    
+    FUNC bool DontHandleCorrError(\bool error_ui, string error_msg, \VAR string opt_error_msg)
+        SetOptCorrErrorMsg error_msg, \opt_error_msg?opt_error_msg;
+        
+        IF NOT Present(error_ui) THEN RETURN FALSE; ENDIF ! Default: handle correction error internally
+        IF error_ui THEN RETURN FALSE; ENDIF
+        RETURN TRUE;
+    ENDFUNC
+    
+    FUNC bool RetryAfterCorrError(errnum err_num, string error_name, string function_name, string igps_error_msg)
+        VAR btnres answer;
+        
+        IF ERRNO = err_num THEN
+            UIMsgBox \Header:=error_name, function_name + ": " + igps_error_msg, \Buttons:=btnAbrtRtryIgn, \Icon:=iconWarning, \Result:=answer;
+            IF (answer = resRetry) THEN
+                RETURN TRUE;
+            ELSEIF (answer = resAbort) THEN
+                EXIT;
+            ENDIF
+        ENDIF         
+        RETURN FALSE;
+    ENDFUNC
+    
+    FUNC bool CorrSockErrorRaiser(string error_name, string connect_sock_func_name, VAR string corr_error_msg)
+        VAR btnres answer;    
+        IF ERRNO = ERR_SOCK_CLOSED THEN
+            UIMsgBox \Header:=error_name, "Remote socket closed. Reconnect?", \Buttons:=btnOKCancel, \Icon:=iconWarning, \Result:=answer;
+            IF (answer = resOK) THEN
+                %connect_sock_func_name%;
+            ELSEIF (answer = resCancel) THEN
+                EXIT;
+            ENDIF
+            corr_error_msg := "SocketWasReconnected";
+            RETURN TRUE;
+        ENDIF   
+        RETURN FALSE;
+    ENDFUNC
+    
+    FUNC bool CorrRunOffline(bool always_use_offline_data, bool ignore_virt_mode)
+        IF always_use_offline_data THEN
+            RETURN TRUE;
+        ENDIF
+        
+        IF (NOT RobOS()) AND (NOT ignore_virt_mode) THEN
+            RETURN TRUE;
+        ENDIF
+        
+        RETURN FALSE;
+    ENDFUNC
+    
+ENDMODULE

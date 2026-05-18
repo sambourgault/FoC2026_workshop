@@ -1,0 +1,79 @@
+All event log messages.
+Date:	2026-04-24 08:31:51
+System Name:	C11_R11_R12_RW6-13
+Controller Name:	192.168.0.11
+Controller ID :	05-101065
+
+RobotWare: 6.13.02.00
+Key:	 - 
+Options:	
+	UDPUC Driver
+	812-1 Production Manager
+	English
+	603-1 Absolute Accuracy
+	687-1 Advanced Robot Motion
+	613-1 Collision Detection
+	689-1 Externally Guided Motion (EGM)
+	617-1 FlexPendant Interface
+	614-1 FTP SFTP and NFS client
+	610-1 Independent Axis
+	735-8 Keyless Mode Switch, 2 modes
+	976-1 T10 Jogging Device
+	604-1 MultiMove Coordinated
+	623-1 Multitasking
+	612-1 Path Offset
+	611-1 Path Recovery
+	616-1 PC Interface
+	888-2 PROFINET Controller/Device
+	997-1 PROFIsafe F-Device
+	688-1 RobotStudio App Connect
+	1125-2 SafeMove Pro
+	996-1 Safety Module
+	885-1 SoftMove
+	608-1 World Zones
+	RobotWare Base
+
+DriveModule1
+Key:	 - 
+Options:	
+	Axis Calibration
+	Drive System IRB 460/640/660/760/4600/66xx/6700
+	ADU-790A in position X3
+	ADU-790A in position Y3
+	ADU-790A in position Z3
+	IRB 4600-40/2.55 Type C
+
+DriveModule2
+Key:	 - 
+Options:	
+	Axis Calibration
+	Drive System IRB 460/640/660/760/4600/66xx/6700
+	ADU-790A in position X3
+	ADU-790A in position Y3
+	ADU-790A in position Z3
+	IRB 4600-40/2.55 Type C
+
+Additional Options
+
+SAC
+Key:	 - 
+Options:	
+	Standalone Controller
+	Standalone Controller
+	XYZ with no TCP
+	XYZ with no TCP
+
+Common log messages
+SeqNo     	Type	Category            	Code    	Title                                   	Date                	Description	Arguments
+613739    	I   	Operational         	10200   	Event logs are cleared                  	2026-04-24 08:31:07 	User Default User has cleared all event logs.	{args: "Default User"}
+613740    	E   	System              	20010   	Emergency stop state                    	2026-04-24 08:31:13 	The emergency stop circuit has previously been broken, and while broken, an attempt was made to operate the robot.	{args: "110"}
+613741    	E   	System              	20010   	Emergency stop state                    	2026-04-24 08:31:14 	The emergency stop circuit has previously been broken, and while broken, an attempt was made to operate the robot.	{args: "110"}
+
+Operational log messages
+SeqNo     	Type	Category            	Code    	Title                                   	Date                	Description	Arguments
+613739    	I   	Operational         	10200   	Event logs are cleared                  	2026-04-24 08:31:07 	User Default User has cleared all event logs.	{args: "Default User"}
+
+System log messages
+SeqNo     	Type	Category            	Code    	Title                                   	Date                	Description	Arguments
+613740    	E   	System              	20010   	Emergency stop state                    	2026-04-24 08:31:13 	The emergency stop circuit has previously been broken, and while broken, an attempt was made to operate the robot.	{args: "110"}
+613741    	E   	System              	20010   	Emergency stop state                    	2026-04-24 08:31:14 	The emergency stop circuit has previously been broken, and while broken, an attempt was made to operate the robot.	{args: "110"}

@@ -1,0 +1,88 @@
+MODULE RFL_SpeedLimit_12(SYSMODULE)
+    !***********************************************************************************
+    !
+    ! ETH Zurich / Robotic Fabrication Lab
+    ! HIB C 13 / Stefano-Franscini-Platz 1
+    ! CH-8093 Zurich
+    !
+    !***********************************************************************************
+    !
+    ! PROJECT     :  A011_RFL
+    !
+    ! FUNCTION    :  Record new data types for RFL and DFAB
+    !
+    ! AUTHOR      :  Philippe Fleischmann
+    !
+    ! EMAIL       :  fleischmann@arch.ethz.ch
+    !
+    ! HISTORY     :  2018.02.19 Draft
+    !
+    ! Copyright   :  ETH Zurich (CH) 2018
+    !
+    !***********************************************************************************
+
+    !************************************************
+    ! Record : speedlimdata   
+    !************************************************
+    !
+    RECORD speedlimdata
+        num tcpspeed;
+        num rax_1;
+        num rax_2;
+        num rax_3;
+        num rax_4;
+        num rax_5;
+        num rax_6;
+        num eax_a;
+        num eax_b;
+        num eax_c;
+        num eax_d;
+        num eax_e;
+        num eax_f;
+    ENDRECORD
+
+    !************************************************
+    ! Declaration :     speedlimdata
+    !************************************************
+    !
+    PERS speedlimdata slim_RFL_Master;
+    PERS speedlimdata slim_RFL_PathPlan;
+    PERS speedlimdata slim_RFL_Act;
+    !
+    ! Projects
+    PERS speedlimdata slim_A019_Master;
+    PERS speedlimdata slim_A019_Mill;
+    PERS speedlimdata slim_A019_Drill;
+    !
+    ! Toolchancer
+    PERS speedlimdata slim_TC_Master;
+
+    !************************************************
+    ! Function    :     Set Speed Limit 
+    ! Programmer  :     Philippe Fleischmann
+    ! Date        :     2018.02.19
+    !***************** ETH Zurich *******************
+    !
+    PROC r_RFL_SetSpeedLimit(speedlimdata slimData)
+        !
+        ! Set speed limit check point (Arm Check Point, WCP, tool0 and current TCP)
+        SpeedLimCheckPoint slimData.tcpspeed;
+        !
+        ! Set speed limit of robot axis
+        SpeedLimAxis ROB_2,1,slimData.rax_1;
+        SpeedLimAxis ROB_2,2,slimData.rax_2;
+        SpeedLimAxis ROB_2,3,slimData.rax_3;
+        SpeedLimAxis ROB_2,4,slimData.rax_4;
+        SpeedLimAxis ROB_2,5,slimData.rax_5;
+        SpeedLimAxis ROB_2,6,slimData.rax_6;
+        !
+        ! Set speed limit of externeal axis
+        SpeedLimAxis Gantry12,1,slimData.eax_a;
+        SpeedLimAxis Gantry12,2,slimData.eax_b;
+        SpeedLimAxis Gantry12,3,slimData.eax_c;
+        RETURN ;
+    ERROR
+        ! Placeholder for Error Code...
+    ENDPROC
+
+ENDMODULE

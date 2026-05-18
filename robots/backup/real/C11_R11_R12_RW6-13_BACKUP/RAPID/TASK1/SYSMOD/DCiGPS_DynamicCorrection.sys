@@ -1,0 +1,478 @@
+MODULE DCiGPS_DynamicCorrection(SYSMODULE, NOSTEPIN)
+    ! The documentation can be found in the wiki on https://bitbucket.org/adrlab/adrl-rfl-dynamic-correction/
+    
+    RECORD dcigps_speedata
+        num v_lin; ! Linear velocity [mm/s]
+        num v_ang; ! Angular velocity [deg/s]
+        num acc_t; ! Acceleration time until reaching specified velocity [s]
+    ENDRECORD
+    
+    LOCAL VAR num dc_robot_index;
+    LOCAL VAR socketdev dc_socket;
+    LOCAL VAR rawbytes dc_raw_message;
+    LOCAL VAR num dc_msg_type_rcv;
+    LOCAL VAR MSG_RFL_DC_STOP_CNTRL rfl_dc_stop_cntrl_msg;
+    LOCAL VAR MSG_RFL_DC_MOVEMENT_FINISHED rfl_dc_movement_finished_msg;
+    LOCAL VAR MSG_RFL_DC_CNTRL_AGGR rfl_dc_cntrl_aggr_msg;
+    LOCAL VAR MSG_RFL_DC_MOVE_CMD rfl_dc_move_cmd_msg;
+    LOCAL VAR bool first_try := TRUE;
+    LOCAL PERS tooldata dc_tool := [TRUE, [[0,0,0], [1,0,0,0]], [0.001, [0,0,0.001], [1,0,0,0], 0, 0, 0]];
+    LOCAL PERS wobjdata dc_wobj := [FALSE, TRUE, "", [[0,0,0], [1,0,0,0]], [[0,0,0], [1,0,0,0]]];
+    LOCAL VAR num controller_aggressivity := kDCDefaultAggressivity;
+    LOCAL VAR errnum ERR_DCIGPS := -1;
+    
+    ! Start the RFL Dynamic Correction Controller in the motion task
+    PROC DCiGPSStartController(string robot_name, \loaddata tool_load, string dc_procedure, \bool error_ui, \VAR string dc_error_msg)
+        IF FindRobotIndex(robot_name, dc_robot_index) = FALSE THEN
+            UIMsgBox \Header:="DCiGPS Error", "Robot name not available in DCiGPSStartController()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+        
+        IF kDCAlwaysUseOfflineData THEN
+            TPWrite "WARNING: Always using iGPS Offline Data.";
+        ENDIF
+        
+        IF kDCIngoreVirtMode THEN
+            TPWrite "WARNING: Virtual controller will also connect to DC server.";
+        ENDIF
+        
+        SetDCRunning dc_robot_index, FALSE;
+        SetDCProc dc_robot_index, dc_procedure;
+        
+        IF RunOffline() THEN
+            StartVirtual \tool_load?tool_load;
+        ELSE
+            IF kUpdateOfflineData THEN
+                TPWrite "Updating iGPS Offline Data from Static Correction Server...";
+                OfflineDataUpdater robot_name, \error_ui?error_ui, \corr_error_msg?dc_error_msg;
+            ENDIF
+            StartEGM \tool_load?tool_load;
+        ENDIF
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    ! Dispatcher in the background task which runs the dynamic correction procedure that was specified in DCiGPSStartController()
+    PROC DCiGPSDispatcher(string robot_name)
+        VAR string igps_error_msg;
+        
+        IF FindRobotIndex(robot_name, dc_robot_index) = FALSE THEN
+            UIMsgBox \Header:="DCiGPS Error", "Robot name not available in DCiGPSDispatcher()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+        
+        WHILE TRUE DO
+            ! Process only if the Dynamic Correction Controller is running, otherwise wait.
+            IF GetDCRunning(dc_robot_index) THEN
+                ! Connect to the RFL Dynamic Correction Server
+                ConnectDCSserver;     
+                
+                ! Run the dynamic correction procedure which was specified in DCiGPSStartController()
+                %GetDCProc(dc_robot_index)%;  
+                
+                ! Stop the Dynamic Correction Controller
+                RFLDCStopController;
+                
+                ! Disconnect from the RFL Dynamic Correction Server
+                DisconnectDCServer;
+            ELSE
+                WaitTime 1;
+            ENDIF
+        ENDWHILE
+    ERROR
+        IF SockErrorRaiser(igps_error_msg) THEN            
+            RETRY;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    ! RFL Dynamic Correction Set Controller Aggressivity
+    PROC DCiGPSSetAggressivity(\switch LOW | switch MID | switch HIGH)        
+        IF Present(LOW) controller_aggressivity := 0;
+        IF Present(MID) controller_aggressivity := 1;
+        IF Present(HIGH) controller_aggressivity := 2;
+        
+        RFLDCSetAggressivity;
+    ENDPROC
+    
+    
+    ! RFL Dynamic Correction MoveL
+    PROC DCiGPSMoveL(robtarget rob_target, dcigps_speedata speed, string tool, string wobj, \switch FlyBy, \num hold_target_time, \bool error_ui, \VAR string dc_error_msg)
+        VAR num end_point_type := 1;
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        IF Present(FlyBy) THEN end_point_type := 0; ENDIF
+       
+        ProcessMoveCmd 1, rob_target, rob_target, speed, tool, wobj, end_point_type, \hold_target_time?hold_target_time, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?dc_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?dc_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("DCiGPSMoveL", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    ! RFL Dynamic Correction MoveC
+    PROC DCiGPSMoveC(robtarget rob_target_1, robtarget rob_target_2, dcigps_speedata speed, string tool, string wobj, \switch FlyBy, \num hold_target_time, \bool error_ui, \VAR string dc_error_msg)
+        VAR num end_point_type := 1;
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        IF Present(FlyBy) THEN end_point_type := 0; ENDIF
+       
+        ProcessMoveCmd 2, rob_target_1, rob_target_2, speed, tool, wobj, end_point_type, \hold_target_time?hold_target_time, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?dc_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?dc_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("DCiGPSMoveC", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    ! RFL Dynamic Correction Hold Rob Target
+    PROC DCiGPSHoldRobTarget(robtarget rob_target, string tool, string wobj, num hold_target_time, \bool error_ui, \VAR string dc_error_msg)
+        VAR string igps_error_msg;
+        first_try := TRUE;
+        
+        ProcessMoveCmd 1, rob_target, rob_target, kDCHoldTargetMoveLSpeed, tool, wobj, 1, \hold_target_time:=hold_target_time, igps_error_msg;
+        
+        SetOptCorrErrorMsg igps_error_msg, \opt_error_msg?dc_error_msg;
+    ERROR
+        IF DontHandleCorrError(\error_ui?error_ui, igps_error_msg, \opt_error_msg?dc_error_msg) THEN
+            RAISE;
+        ENDIF
+        
+        IF RetryAfterError("DCiGPSHoldRobTarget", igps_error_msg) THEN
+            RETRY;
+        ELSE
+            TRYNEXT;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC ProcessMoveCmd(num path_type, robtarget rob_target_1, robtarget rob_target_2, dcigps_speedata speed, string tool, string wobj, num end_point_type, \num hold_target_time, VAR string dc_error_msg)
+        VAR num recover_path_num := 0;
+        VAR num hold_pose_time := 0;
+        
+        ! Recover last path if executing retry and movement did not finish before
+        IF ((NOT first_try) AND dc_error_msg = "MovementDidNotFinish") THEN
+            recover_path_num := 1;
+        ENDIF
+        first_try := FALSE;
+        dc_error_msg := "Success";
+        
+        IF Present(hold_target_time) THEN hold_pose_time := hold_target_time; ENDIF
+        
+        ! Create and send Move command request to dynamic correction server
+        CreateMoveCmdRequest path_type, rob_target_1, rob_target_2, speed, tool, wobj, end_point_type, recover_path_num, hold_pose_time;
+        PackMSGRFLDCMoveCmd rfl_dc_move_cmd_msg, dc_raw_message;
+        SendMessage dc_socket, dc_raw_message;
+        
+        ! Wait for movement finished message from dynamic correction server
+        ReceiveMessage dc_socket, dc_msg_type_rcv, dc_raw_message;
+        
+        IF (dc_msg_type_rcv = 3) THEN
+            ! Unpack message 
+            UnpackMSGRFLDCMovementFinished dc_raw_message, rfl_dc_movement_finished_msg;
+            dc_error_msg := rfl_dc_movement_finished_msg.dc_error_msg;
+        ELSE
+            dc_error_msg := "ReceivedWrongMessageType";
+        ENDIF
+        
+        ErrorRaiser dc_error_msg;
+    ERROR
+        IF SockErrorRaiser(dc_error_msg) THEN            
+            RAISE ERR_DCIGPS;
+        ELSE
+            RAISE;
+        ENDIF
+    ENDPROC
+    
+    LOCAL PROC CreateMoveCmdRequest(num path_type, robtarget rob_target_1, robtarget rob_target_2, dcigps_speedata speed, string tool, string wobj, num end_point_type, num recover_path, num hold_pose_time)
+        rfl_dc_move_cmd_msg.path_type := path_type;
+        rfl_dc_move_cmd_msg.end_effector_1.trans := rob_target_1.trans;
+        rfl_dc_move_cmd_msg.end_effector_1.rot := rob_target_1.rot;
+        rfl_dc_move_cmd_msg.end_effector_2.trans := rob_target_2.trans;
+        rfl_dc_move_cmd_msg.end_effector_2.rot := rob_target_2.rot;
+        rfl_dc_move_cmd_msg.tool := tool;
+        rfl_dc_move_cmd_msg.wobj := wobj;
+        rfl_dc_move_cmd_msg.v_lin := speed.v_lin / 1000.0; ! [mm/s] -> [m/s]
+        rfl_dc_move_cmd_msg.v_ang := speed.v_ang / 180.0 * pi; ! [deg/s] -> [rad/s]
+        rfl_dc_move_cmd_msg.acc_time := speed.acc_t; ! [s]
+        rfl_dc_move_cmd_msg.end_point_type := end_point_type;
+        rfl_dc_move_cmd_msg.recover_path := recover_path;
+        rfl_dc_move_cmd_msg.hold_pose_time := hold_pose_time;
+    ENDPROC
+
+    LOCAL PROC ConnectDCSserver()
+        BookErrNo ERR_DCIGPS;
+        
+        ! Set controller aggressivity to default value
+        controller_aggressivity := kDCDefaultAggressivity;
+        
+        SetupDCClient;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    PROC SetupDCClient()
+        VAR string address := kDCServerIP;
+        
+        IF RunOffline() THEN
+            address := "127.0.0.1";
+        ENDIF
+        
+        SetupCorrClient dc_socket, address, kDCRobotDefs{dc_robot_index}.dc_server_port;
+        
+        ! Send current controller aggressivity value to server
+        RFLDCSetAggressivity;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC RFLDCStopController()
+        VAR MSG_RFL_DC_STOP_CNTRL rfl_dc_stop_cntrl_msg;
+        VAR num msg_type_rcv;
+        
+        ! Set controller aggressivity to default value and send it to server
+        controller_aggressivity := kDCDefaultAggressivity;
+        RFLDCSetAggressivity;
+        
+        ! Send stop controller message to server
+        SetDCRunning dc_robot_index, FALSE;
+        rfl_dc_stop_cntrl_msg.status := 0;
+        PackMSGRFLDCStopCntrl rfl_dc_stop_cntrl_msg, dc_raw_message;
+        SendMessage dc_socket, dc_raw_message;
+        
+        ! Wait until controller is stopped
+        ReceiveMessage dc_socket, msg_type_rcv, dc_raw_message;
+        
+        IF (msg_type_rcv = 2) THEN
+            ! Unpack message 
+            UnpackMSGRFLDCStopCntrl dc_raw_message, rfl_dc_stop_cntrl_msg;
+        ELSE
+            UIMsgBox \Header:="DCiGPS Error", "Received wrong message type in RFLDCStopController()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+        
+        IF NOT (rfl_dc_stop_cntrl_msg.status = 1) THEN
+            UIMsgBox \Header:="DCiGPS Error", "Received unexpected status in RFLDCStopController()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+        
+        ! Give EGM some time to realize that the controller stopped
+        WaitTime 3;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC RFLDCSetAggressivity()
+        VAR MSG_RFL_DC_CNTRL_AGGR rfl_dc_cntrl_aggr_msg;
+        VAR num msg_type_rcv;
+        
+        ! Return immediately in offline mode
+        IF RunOffline() RETURN;
+        
+        ! Send controller aggressivity message to server
+        rfl_dc_cntrl_aggr_msg.aggressivity := controller_aggressivity;
+        PackMSGRFLDCCntrlAggr rfl_dc_cntrl_aggr_msg, dc_raw_message;
+        SendMessage dc_socket, dc_raw_message;
+        rfl_dc_cntrl_aggr_msg.aggressivity := -1;
+        
+        ! Wait until feedback is received
+        ReceiveMessage dc_socket, msg_type_rcv, dc_raw_message;
+        
+        IF (msg_type_rcv = 5) THEN
+            ! Unpack message 
+            UnpackMSGRFLDCCntrlAggr dc_raw_message, rfl_dc_cntrl_aggr_msg;
+        ELSE
+            UIMsgBox \Header:="DCiGPS Error", "Received wrong message type in DCiGPSSetAggressivity()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+        
+        IF NOT (rfl_dc_cntrl_aggr_msg.aggressivity = controller_aggressivity) THEN
+            UIMsgBox \Header:="DCiGPS Error", "Received unexpected controller aggressivity in DCiGPSSetAggressivity()!", \Buttons:=btnOK, \Icon:=iconWarning;     
+            EXIT;
+        ENDIF
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL PROC DisconnectDCServer()
+        CloseTCPIPClient dc_socket;
+        TPWrite "Dynamic correction server disconnected.";
+    ENDPROC
+    
+    LOCAL PROC StartEGM(\loaddata tool_load)
+        VAR string egm_udp_device;
+        VAR string running_flag_name;
+        
+        egm_udp_device := kDCRobotDefs{dc_robot_index}.egm_udp_device;
+        running_flag_name := kDCRobotDefs{dc_robot_index}.dc_running_var_name;
+        
+        RFLDCStartEGM egm_udp_device, running_flag_name, \tool_load?tool_load;
+    ENDPROC
+    
+    LOCAL PROC StartVirtual(\loaddata tool_load)
+        VAR socketdev server_sock;
+        VAR socketdev client_sock;
+        
+        SetDCRunning dc_robot_index, TRUE;
+        
+        TPWrite "WARNING: Running in virtual controller mode - Using iGPS Offline Data.";
+        TPWrite "Setting up TCP/IP server...";
+        SetupTCPIPServer server_sock, client_sock, "127.0.0.1", kDCRobotDefs{dc_robot_index}.dc_server_port;
+        TPWrite " Server connected.";
+        
+        RunVirtual server_sock, client_sock, \tool_load?tool_load;
+        
+        CloseTCPIPServer server_sock;
+        CloseTCPIPClient client_sock;
+    ENDPROC
+    
+    LOCAL PROC RunVirtual(VAR socketdev server_sock, VAR socketdev client_sock, \loaddata tool_load)
+        VAR bool running := TRUE;
+        
+        WHILE running DO            
+            ! Receive message 
+            ReceiveMessage client_sock, dc_msg_type_rcv, dc_raw_message;
+            
+            ! Unpack message 
+            IF (dc_msg_type_rcv = 2) THEN ! RFL_DC_STOP_CNTRL
+                ProcessVirtualStop running, client_sock;
+            ELSEIF (dc_msg_type_rcv = 4) THEN ! RFL_DC_MOVE_CMD
+                ProcessVirtualMoveCmd running, client_sock, \tool_load?tool_load;
+            ELSE
+                UIMsgBox \Header:="DCiGPS Error", "Unknown request type in RunVirtual()!", \Buttons:=btnOK, \Icon:=iconWarning;
+                EXIT;
+            ENDIF
+        ENDWHILE
+    ENDPROC      
+    
+    LOCAL PROC ProcessVirtualStop(VAR bool running, VAR socketdev client_sock)
+        ! Unpack message
+        UnpackMSGRFLDCStopCntrl dc_raw_message, rfl_dc_stop_cntrl_msg;
+        
+        ! Send stop controller message to client
+        SetDCRunning dc_robot_index, FALSE;
+        rfl_dc_stop_cntrl_msg.status := 1;
+        PackMSGRFLDCStopCntrl rfl_dc_stop_cntrl_msg, dc_raw_message;
+        SendMessage client_sock, dc_raw_message;
+        
+        running := FALSE;
+    ENDPROC
+    
+    LOCAL PROC ProcessVirtualMoveCmd(VAR bool running, VAR socketdev client_sock, \loaddata tool_load)
+        VAR robtarget rob_target_1;
+        VAR robtarget rob_target_2;
+        VAR string dc_error_msg := "Success";
+        VAR speeddata speed_data;
+        VAR zonedata zone := fine;
+        rob_target_1 := CRobT();
+        rob_target_2 := CRobT();
+        speed_data := v5;
+        
+        ! Unpack message
+        UnpackMSGRFLDCMoveCmd dc_raw_message, rfl_dc_move_cmd_msg;
+        rob_target_1.trans := rfl_dc_move_cmd_msg.end_effector_1.trans;
+        rob_target_1.rot := rfl_dc_move_cmd_msg.end_effector_1.rot;
+        rob_target_2.trans := rfl_dc_move_cmd_msg.end_effector_2.trans;
+        rob_target_2.rot := rfl_dc_move_cmd_msg.end_effector_2.rot;
+        speed_data.v_tcp := rfl_dc_move_cmd_msg.v_lin * 1000.0; ! [m/s] -> [mm/s]
+        speed_data.v_ori := rfl_dc_move_cmd_msg.v_ang / pi * 180.0; ! [rad/s] -> [deg/s]
+        
+        IF (rfl_dc_move_cmd_msg.end_point_type = 0) THEN zone := z5; ENDIF
+        
+        ! Process Move command        
+        OfflineMovement rfl_dc_move_cmd_msg.path_type, rob_target_1, \rob_target_2:=rob_target_2, speed_data, rfl_dc_move_cmd_msg.tool, \tool_load?tool_load, rfl_dc_move_cmd_msg.wobj, zone, dc_error_msg;
+        
+        IF (dc_error_msg = "Success" AND rfl_dc_move_cmd_msg.end_point_type = 1) THEN WaitTime rfl_dc_move_cmd_msg.hold_pose_time; ENDIF
+        
+        ! Send feedback to client
+        rfl_dc_movement_finished_msg.dc_error_code := 0;
+        rfl_dc_movement_finished_msg.dc_error_msg := dc_error_msg;
+        PackMSGRFLDCMovementFinished rfl_dc_movement_finished_msg, dc_raw_message;
+        SendMessage client_sock, dc_raw_message;
+    ENDPROC
+    
+    LOCAL PROC OfflineMovement(num path_type, robtarget rob_target_1, \robtarget rob_target_2, speeddata speed, string tool, \loaddata tool_load, string wobj, zonedata zone, VAR string dc_error_msg)
+        GetOfflineiGPSTool tool, dc_tool, dc_error_msg;
+        GetOfflineiGPSWobj wobj, dc_wobj, dc_error_msg; 
+        
+        IF Present(tool_load) THEN
+            dc_tool.tload := tool_load;
+        ENDIF
+        
+        IF (dc_error_msg = "Success") THEN
+            IF (path_type = 1) THEN MoveL rob_target_1, speed, zone, dc_tool, \WObj:=dc_wobj; ENDIF
+            IF (path_type = 2) THEN MoveC rob_target_1, rob_target_2, speed, zone, dc_tool, \WObj:=dc_wobj; ENDIF
+        ENDIF
+    
+        ! Make sure initial state stays the same (Persistent)
+        dc_tool := tool0;  
+        dc_wobj := wobj0;        
+    ENDPROC
+    
+    FUNC bool FindDCRobotIndex(string robot_name, VAR num rob_index)        
+        FOR i FROM 1 TO Dim(kDCRobotDefs, 1) DO 
+            IF robot_name = kDCRobotDefs{i}.robot_name THEN
+                rob_index := i;
+                RETURN TRUE;
+            ENDIF
+        ENDFOR
+        
+        RETURN FALSE;
+    ENDFUNC
+    
+    FUNC bool GetDCRunning(num robot_index)        
+        VAR bool dc_running;
+        GetDataVal kDCRobotDefs{robot_index}.dc_running_var_name, dc_running;
+        RETURN dc_running;
+    ENDFUNC
+    
+    PROC SetDCRunning(num robot_index, bool dc_running)
+        SetDataVal kDCRobotDefs{robot_index}.dc_running_var_name, dc_running;
+    ENDPROC
+    
+    FUNC string GetDCProc(num robot_index)        
+        VAR string dc_proc;
+        GetDataVal kDCRobotDefs{robot_index}.dc_proc_name, dc_proc;
+        RETURN dc_proc;
+    ENDFUNC
+    
+    PROC SetDCProc(num robot_index, string dc_proc)
+        SetDataVal kDCRobotDefs{robot_index}.dc_proc_name, dc_proc;
+    ENDPROC
+    
+    LOCAL PROC ErrorRaiser(string dc_error_msg)
+        CorrMsgErrorRaiser ERR_DCIGPS, dc_error_msg;
+    ERROR
+        RAISE;
+    ENDPROC
+    
+    LOCAL FUNC bool RetryAfterError(string function_name, string dc_error_msg)
+        RETURN RetryAfterCorrError(ERR_DCIGPS, "DCiGPS Error", function_name, dc_error_msg);
+    ENDFUNC
+    
+    LOCAL FUNC bool SockErrorRaiser(VAR string dc_error_msg)
+        RETURN CorrSockErrorRaiser("DCiGPS Error", "SetupDCClient", dc_error_msg);
+    ENDFUNC
+    
+    LOCAL FUNC bool RunOffline()
+        RETURN CorrRunOffline(kDCAlwaysUseOfflineData, kDCIngoreVirtMode);
+    ENDFUNC
+    
+ENDMODULE

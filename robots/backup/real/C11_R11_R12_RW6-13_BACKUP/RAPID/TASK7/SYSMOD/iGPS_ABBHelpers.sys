@@ -1,0 +1,111 @@
+MODULE iGPS_ABBHelpers(SYSMODULE, NOSTEPIN)
+    
+    FUNC pose CPoseT(\string TaskName, PERS tooldata Tool, PERS wobjdata WObj)
+        VAR pose pose_var;
+        VAR robtarget rob_target;
+        
+        rob_target := CRobT(\TaskName?TaskName, \Tool:=Tool, \WObj:=WObj);
+        
+        pose_var.trans := rob_target.trans;
+        pose_var.rot := rob_target.rot;
+        
+        RETURN pose_var;
+    ENDFUNC
+    
+    FUNC extjoint CExtT(\string TaskName)
+        VAR extjoint extjoint_var;
+        VAR robtarget rob_target;
+        
+        rob_target := CRobT(\TaskName?TaskName, \Tool:=tool0, \WObj:=wobj0);
+        
+        extjoint_var := rob_target.extax;
+        
+        RETURN extjoint_var;
+    ENDFUNC
+    
+    FUNC confdata CConfT(\string TaskName)
+        VAR confdata confdata_var;
+        VAR robtarget rob_target;
+        
+        rob_target := CRobT(\TaskName?TaskName, \Tool:=tool0, \WObj:=wobj0);
+        
+        confdata_var := rob_target.robconf;
+        
+        RETURN confdata_var;
+    ENDFUNC
+    
+    FUNC string PosToStr(pos position, num decimals)
+        RETURN "[" + NumToStr(position.x, decimals) + ","
+            + NumToStr(position.y, decimals) + ","
+            + NumToStr(position.z, decimals) + "]";
+    ENDFUNC
+    
+    FUNC string OrientToStr(orient orientation, num decimals)
+        RETURN "[" + NumToStr(orientation.q1, decimals) + ","
+            + NumToStr(orientation.q2, decimals) + ","
+            + NumToStr(orientation.q3, decimals) + ","
+            + NumToStr(orientation.q4, decimals) + "]";
+    ENDFUNC
+    
+    FUNC string ExtAxToStr(extjoint ext_joint, num decimals)
+        RETURN "[" + NumToStr(ext_joint.eax_a, decimals) + ","
+            + NumToStr(ext_joint.eax_b, decimals) + ","
+            + NumToStr(ext_joint.eax_c, decimals) + "]";
+    ENDFUNC
+    
+    PROC PrintRobTarget(robtarget rob_target, string name)
+        TPWrite name + ":";
+        TPWrite "T: " + PosToStr(rob_target.trans, 2);
+        TPWrite "R: " + OrientToStr(rob_target.rot, 5);
+        TPWrite "E: " + ExtAxToStr(rob_target.extax, 2);
+    ENDPROC
+   
+    ! Return the maximum difference between two extax values.
+    FUNC num MaxDiffExtAx(extjoint ext_joint_1, extjoint ext_joint_2)
+        VAR num max_diff := 0;
+        VAR num diffs{6};
+        
+        diffs{1} := Abs(ext_joint_1.eax_a - ext_joint_2.eax_a);
+        diffs{2} := Abs(ext_joint_1.eax_b - ext_joint_2.eax_b);
+        diffs{3} := Abs(ext_joint_1.eax_c - ext_joint_2.eax_c);
+        diffs{4} := Abs(ext_joint_1.eax_d - ext_joint_2.eax_d);
+        diffs{5} := Abs(ext_joint_1.eax_e - ext_joint_2.eax_e);
+        diffs{6} := Abs(ext_joint_1.eax_f - ext_joint_2.eax_f);
+        
+        FOR i FROM 1 TO 6 DO
+            IF diffs{i} > max_diff THEN
+                max_diff := diffs{i};
+            ENDIF
+        ENDFOR
+
+        RETURN max_diff;
+    ENDFUNC
+    
+    ! Return the maximum difference between two orientations.
+    FUNC num MaxDiffOrient(orient orient_1, orient orient_2)
+        VAR num max_diff := 0;
+        VAR num diffs{4};
+        
+        diffs{1} := Abs(orient_1.q1 - orient_2.q1);
+        diffs{2} := Abs(orient_1.q2 - orient_2.q2);
+        diffs{3} := Abs(orient_1.q3 - orient_2.q3);
+        diffs{4} := Abs(orient_1.q4 - orient_2.q4);
+        
+        FOR i FROM 1 TO 4 DO
+            IF diffs{i} > max_diff THEN
+                max_diff := diffs{i};
+            ENDIF
+        ENDFOR
+
+        RETURN max_diff;
+    ENDFUNC
+    
+    ! Flip quaternion.
+    PROC FlipQuat(VAR orient quat)
+        quat.q1 := -quat.q1;
+        quat.q2 := -quat.q2;
+        quat.q3 := -quat.q3;
+        quat.q4 := -quat.q4;
+    ENDPROC
+    
+ENDMODULE
