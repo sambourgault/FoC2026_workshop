@@ -53,16 +53,16 @@ MODULE RRC_DataTask_Tx(SYSMODULE)
     CONST num n_RRC_ProtocolRob:=2;
     CONST num n_RRC_SendProtocolPerChannel:=2;
     !
-    TASK PERS num n_RRC_ReadPtrSenBufRob{n_RRC_NumOfCha}:=[1,7,1,1];
+    TASK PERS num n_RRC_ReadPtrSenBufRob{n_RRC_NumOfCha}:=[1,1,1,1];
     TASK PERS num n_RRC_ReadPtrSenBufCtrl{n_RRC_NumOfCha}:=[1,1,1,1];
     !
-    TASK PERS num n_RRC_SenHeaderSqzNr{n_RRC_NumOfCha}:=[0,6,0,0];
+    TASK PERS num n_RRC_SenHeaderSqzNr{n_RRC_NumOfCha}:=[0,0,0,0];
     !
-    TASK PERS num n_RRC_SenMsgLenRob:=66;
+    TASK PERS num n_RRC_SenMsgLenRob:=63;
     !
-    TASK PERS num n_RRC_TimeStamp:=141.395;
-    TASK PERS num n_RRC_TimeStampSec:=141;
-    TASK PERS num n_RRC_TimeStampNanoSec:=395;
+    TASK PERS num n_RRC_TimeStamp:=22.056;
+    TASK PERS num n_RRC_TimeStampSec:=22;
+    TASK PERS num n_RRC_TimeStampNanoSec:=55;
 
     !************************************************
     ! Declaration :     string
@@ -101,7 +101,7 @@ MODULE RRC_DataTask_Tx(SYSMODULE)
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]],
 
     [[[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
-    [[70,2,141,395],[6,0,18,"r_RRC_MoveToJoints",0,4,"Done",1,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
     [[0,0,0,0],[0,0,0,"",0,0,"",0,0,0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]];
 

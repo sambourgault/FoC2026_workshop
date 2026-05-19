@@ -80,7 +80,7 @@ MODULE RRC_Base_DataTask_Rob (SYSMODULE)
     !************************************************
     !
     CONST speeddata v_RRC_Default:=[25,500,5000,1000];
-    TASK PERS speeddata v_RRC_Act:=[250,500,5000,1000];
+    TASK PERS speeddata v_RRC_Act:=[25,500,5000,1000];
 
     !************************************************
     ! Declaration :     zonedata

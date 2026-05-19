@@ -44,7 +44,7 @@ MODULE ABB_DataTask_11(SYSMODULE)
     !
     CONST num n_ABB_BrakeCheckPosZ:=-4915;
     CONST num n_ABB_MaxPreBrakeCheckPosZ:=-4900;
-    TASK PERS num n_ABB_BrakeCheckAktPosZ:=-4880.91;
+    TASK PERS num n_ABB_BrakeCheckAktPosZ:=-4849.95;
     !
     TASK PERS num nCraneMoveStep:=1;
 
@@ -91,8 +91,8 @@ MODULE ABB_DataTask_11(SYSMODULE)
     TASK PERS jointtarget jposCalibration:=[[0,0,0,0,0,0],[17400,-3600,-4515,0,0,0]];
     !
     TASK PERS jointtarget pCheckBrakePos11:=[[0,-73,73,0,0,0],[20688.2,0,-4610,0,0,0]];
-    TASK PERS jointtarget jpStorePosBeforBrakeCheck:=[[-2.04068,90.2631,-2.45014,-0.0506192,-49.1406,-0.00155294],[13101.6,-2117.45,-4880.91,0,0,0]];
-    TASK PERS jointtarget jpTemp:=[[0.000159977,-65.0005,65,-8.21297E-05,34.9992,-0.000515482],[22351.4,0.0199107,-4850,0,0,0]];
+    TASK PERS jointtarget jpStorePosBeforBrakeCheck:=[[0.00106126,-65.0009,64.9998,-0.0022794,34.9919,-0.0103974],[22350,-0.0141674,-4849.95,0,0,0]];
+    TASK PERS jointtarget jpTemp:=[[0.00106126,-65.0009,64.9998,-0.0022794,34.9919,-0.0103974],[22350,-0.0141674,-4915,0,0,0]];
 
     !************************************************
     ! Declaration :     robtarget
